@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800;900&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=loot-images-2" />
+  <link rel="stylesheet" href="style.css?v=smooth-v1" />
 </head>
 <body>
   <div class="app-shell">
@@ -109,10 +109,11 @@
         </section>
         <section class="game-view general-view" id="general-view" hidden><div class="general-empty"><span class="general-icon"><svg viewBox="0 0 24 24"><path d="M4 19V5m0 14h17M8 15l4-4 3 3 6-7"/></svg></span><div class="game-eyebrow"><span></span> ЦЕНТР КЕРУВАННЯ</div><h1>ЗАГАЛЬНЕ</h1><p>Цей розділ ще будується. Згодом тут з’являться звіти, статистика й керування містом.</p><span class="coming-soon">СКОРО В ГРІ</span></div></section>
       </div>
+      <div class="toast game-toast" id="game-toast" role="status" aria-live="polite"></div>
       <div class="case-overlay" id="case-overlay" role="dialog" aria-modal="true" aria-label="Відкриття контейнера" hidden><div class="case-opening-panel"><button class="case-close" id="case-close" aria-label="Закрити"><svg viewBox="0 0 20 20"><path d="m5 5 10 10M15 5 5 15"/></svg></button><div class="game-eyebrow"><span></span> ВАНТАЖ ІЗ КОНТЕЙНЕРА</div><h2 id="case-opening-title">ВІДКРИВАЄМО КОНТЕЙНЕР</h2><p class="case-opening-subtitle" id="case-opening-subtitle">Зараз дізнаємось, що всередині…</p><div class="roulette-window"><div class="roulette-pointer"></div><div class="roulette-track" id="roulette-track"></div></div><div class="case-result" id="case-result" hidden><span class="result-label">ТВОЯ ЗНАХІДКА</span><b id="result-name">РІДКІСНИЙ ПРЕДМЕТ</b><strong id="result-value">+$ 0</strong><button class="primary-button" id="collect-result"><span>ЗАБРАТИ НАГОРОДУ</span><svg viewBox="0 0 20 20"><path d="m4 10 4 4 8-8"/></svg></button></div></div></div>
     </div>
   </dialog>
   <div class="toast" id="toast" role="status"></div>
-  <script src="app.js?v=loot-images-2"></script>
+  <script src="app.js?v=smooth-v1"></script>
 </body>
 </html>

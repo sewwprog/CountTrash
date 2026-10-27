@@ -83,3 +83,17 @@
 .drop-rates .drop-item span b{float:none;flex:none;color:#d8b06b;font-size:7px}
 .roulette-item img{display:block;width:100%;height:100%;object-fit:cover}
 @media(max-width:680px){.drop-rates .drop-items-grid{gap:5px}.drop-rates .drop-item span{font-size:6px;padding:4px}.drop-rates .drop-item span b{font-size:6px}}
+
+/* Smoother state changes and game-layer feedback */
+.game-tab{transition:color .18s ease,border-color .18s ease,background-color .18s ease}
+.game-view.active{animation:game-view-enter .22s cubic-bezier(.2,.7,.25,1) both}
+@keyframes game-view-enter{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
+.city-lot{animation:lot-appear .2s ease-out both}
+@keyframes lot-appear{from{opacity:0}to{opacity:1}}
+.build-card,.selection-panel,.open-case{transition:background-color .18s ease,border-color .18s ease,transform .18s ease}
+.build-card:hover{transform:translateY(-1px)}
+.game-toast{position:absolute;z-index:150;right:20px;bottom:18px;left:auto;max-width:min(360px,calc(100% - 30px))}
+.modal-toast{position:fixed;z-index:1000;right:auto;bottom:22px;left:50%;transform:translate(-50%,8px);white-space:normal;text-align:center}
+.modal-toast.show{transform:translate(-50%,0)}
+@media(max-width:680px){.game-toast{right:10px;bottom:76px;left:10px;max-width:none;text-align:center}.modal-toast{right:12px;bottom:22px;left:12px;transform:translateY(8px)}.modal-toast.show{transform:translateY(0)}}
+@media(prefers-reduced-motion:reduce){.game-view.active,.city-lot{animation:none!important}}
