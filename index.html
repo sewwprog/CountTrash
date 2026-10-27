@@ -4,7 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#0b0d11" />
-  <title>COUNTTRASH — Контроль починається тут</title>
+  <meta name="description" content="COUNTTRASH — побудуй власну імперію в порту." />
+  <title>COUNTTRASH — Твоя імперія починається тут</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800;900&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -12,89 +13,73 @@
 </head>
 <body>
   <div class="app-shell">
-    <aside class="sidebar">
-      <a class="brand" href="#home" aria-label="COUNTTRASH головна">
-        <span class="brand-mark"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M5 8.5 16 3l11 5.5v15L16 29 5 23.5z"/><path d="M5 8.5 16 14l11-5.5M16 14v15M10 6l11 5.5"/></svg></span>
+    <aside class="sidebar" aria-label="Бічна панель">
+      <a class="brand" href="#home" aria-label="COUNTTRASH — на головну">
+        <span class="brand-mark"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="m5 8.5 11-5.5 11 5.5v15L16 29 5 23.5zM5 8.5 16 14l11-5.5M16 14v15"/></svg></span>
         <span class="brand-copy"><strong>COUNT<span>TRASH</span></strong><small>БІЗНЕС БЕЗ ПРАВИЛ</small></span>
       </a>
-      <div class="side-label">ГОЛОВНЕ МЕНЮ</div>
+      <div class="side-label">МЕНЮ</div>
       <nav class="main-nav" aria-label="Головна навігація">
-        <button class="nav-item active" data-view="home"><span class="nav-icon">⌂</span><span>Головна</span></button>
-        <button class="nav-item" data-action="new"><span class="nav-icon plus">＋</span><span>Нова гра</span><span class="nav-hot">NEW</span></button>
-        <button class="nav-item" data-view="saves"><span class="nav-icon">▤</span><span>Збережені ігри</span><span class="nav-count" id="save-count">0</span></button>
+        <button class="nav-item active" data-view="home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/></svg><span>Головна</span></button>
+        <button class="nav-item" data-view="saves"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h12l3 3v13H4V4zM8 4v6h8V4M8 20v-7h8v7"/></svg><span>Збережені ігри</span><span class="nav-count" id="save-count">0</span></button>
       </nav>
-      <div class="side-label side-label-lower">ТВІЙ ПРОФІЛЬ</div>
-      <nav class="main-nav">
-        <button class="nav-item" data-action="profile"><span class="nav-icon">◎</span><span>Профіль</span></button>
-        <button class="nav-item" data-action="settings"><span class="nav-icon">⚙</span><span>Налаштування</span></button>
-      </nav>
-      <div class="sidebar-bottom">
-        <div class="online"><span class="online-dot"></span> СИСТЕМА ПРАЦЮЄ <span class="online-version">v.0.1</span></div>
-        <div class="sidebar-note">Тут кожен контейнер<br />може змінити все.</div>
-      </div>
+      <div class="sidebar-bottom"><span class="status-dot"></span><span>ПОРТ ПРАЦЮЄ</span><span class="version">v.0.1</span></div>
     </aside>
 
-    <main class="main-area" id="main-area">
+    <main class="main-area" id="home">
       <header class="topbar">
-        <div class="breadcrumb"><span>COUNTTRASH</span><i>/</i><b id="breadcrumb-current">ГОЛОВНА</b></div>
+        <div class="breadcrumb"><span>COUNTTRASH</span><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m6 3 5 5-5 5"/></svg><b id="breadcrumb-current">ГОЛОВНА</b></div>
         <div class="top-actions">
-          <button class="icon-button notification-button" aria-label="Сповіщення" title="Сповіщення"><svg viewBox="0 0 24 24"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg><span class="notification-dot"></span></button>
-          <button class="profile-chip" data-action="profile"><span class="avatar" id="avatar-initial">Г</span><span class="profile-chip-copy"><b id="top-name">Гравець</b><small>НОВИЙ БОС</small></span><span class="chevron">⌄</span></button>
+          <button class="icon-button" data-action="profile" aria-label="Профіль" title="Профіль"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2z"/></svg><span class="top-action-label" id="top-name">Гравець</span></button>
+          <button class="icon-button" data-action="settings" aria-label="Налаштування" title="Налаштування"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z"/><path d="m19.4 15 .1.1a2 2 0 1 1-2.8 2.8l-.1-.1a2 2 0 0 0-3.4 1.4v.3a2 2 0 1 1-4 0v-.2A2 2 0 0 0 5.8 17l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A2 2 0 0 0 1.6 11H1.5a2 2 0 1 1 0-4h.2A2 2 0 0 0 3.1 3.6L3 3.5a2 2 0 1 1 2.8-2.8l.1.1A2 2 0 0 0 9.3-.6v-.2a2 2 0 1 1 4 0v.2a2 2 0 0 0 3.4 1.4l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1A2 2 0 0 0 21 7h.2a2 2 0 1 1 0 4H21a2 2 0 0 0-1.6 4z" transform="translate(1.1 2) scale(.91)"/></svg></button>
         </div>
       </header>
 
-      <div class="content" id="content">
-        <section class="welcome-row">
-          <div><div class="eyebrow"><span class="eyebrow-line"></span> ТВОЯ ІМПЕРІЯ ПОЧИНАЄТЬСЯ ЗАРАЗ</div><h1>ГОЛОВНЕ <span>МЕНЮ</span></h1><p class="welcome-sub">Порт відкритий. Контейнери чекають. Що робимо, босе?</p></div>
-          <div class="date-chip"><span class="date-icon">◷</span><span><b>НОВИЙ ДЕНЬ</b><small>ПОНЕДІЛОК, 06:00</small></span></div>
-        </section>
-
-        <section class="hero-card" aria-label="Почати нову гру">
-          <div class="hero-shade"></div>
+      <div class="content">
+        <div class="eyebrow"><span class="eyebrow-line"></span> ПОРТ №07 · НІЧНА ЗМІНА</div>
+        <section class="hero-card" aria-labelledby="hero-title">
           <div class="hero-content">
             <div class="hero-kicker"><span class="live-pip"></span> ТВОЯ ІСТОРІЯ ПОЧИНАЄТЬСЯ ТУТ</div>
-            <h2>ВІДКРИЙ<br />СВІЙ <em>КОНТЕЙНЕР.</em></h2>
+            <h1 id="hero-title">ВІДКРИЙ СВІЙ<br /><em>КОНТЕЙНЕР.</em></h1>
             <p>Кожен вантаж — загадка. Кожне рішення — ризик.<br class="desktop-break" /> Побудуй бізнес, який переживе будь-який шторм.</p>
-            <button class="primary-button" data-action="new"><span>ПОЧАТИ НОВУ ГРУ</span><b>↗</b></button>
+            <button class="primary-button" data-action="new"><span>ПОЧАТИ НОВУ ГРУ</span><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 16 16 4M6 4h10v10"/></svg></button>
           </div>
-          <div class="hero-index"><b>01</b><span>—</span><small>НОВИЙ<br />ПОЧАТОК</small></div>
-          <div class="hero-caption"><span class="caption-bar"></span> ПОРТ №07 &nbsp;·&nbsp; НІЧНА ЗМІНА</div>
+          <div class="hero-index"><b>01</b><span class="index-line"></span><small>НОВИЙ<br />ПОЧАТОК</small></div>
+          <div class="hero-caption"><span></span> КОЖЕН КОНТЕЙНЕР ХОВАЄ ІСТОРІЮ</div>
         </section>
 
-        <section class="lower-grid">
-          <div class="section-heading"><div><span class="eyebrow small-eyebrow">ОБИРАЙ СВІЙ НАСТУПНИЙ КРОК</span><h3>З ЧОГО ПОЧНЕМО?</h3></div><span class="section-mark">02 / 03</span></div>
-          <div class="action-grid">
-            <button class="action-card" data-view="saves">
-              <div class="action-top"><span class="card-icon save-icon"><svg viewBox="0 0 24 24"><path d="M5 4h12l3 3v13H4V4zM8 4v6h8V4M8 20v-7h8v7"/></svg></span><span class="card-arrow">↗</span></div>
-              <div class="action-title">ПРОДОВЖИТИ</div><p>Повернись до свого бізнесу та продовжуй з того місця, де зупинився.</p>
-              <div class="card-footer"><span><i class="mini-dot"></i><b id="resume-label">НЕМАЄ ЗБЕРЕЖЕНЬ</b></span><span class="footer-arrow">→</span></div>
-            </button>
-            <button class="action-card" data-action="profile">
-              <div class="action-top"><span class="card-icon profile-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2z"/></svg></span><span class="card-arrow">↗</span></div>
-              <div class="action-title">ТВІЙ ПРОФІЛЬ</div><p>Налаштуй особистість боса. Ім'я, яке знатиме весь порт.</p>
-              <div class="card-footer"><span><i class="mini-dot"></i><b id="profile-label">ГРАВЕЦЬ</b></span><span class="footer-arrow">→</span></div>
-            </button>
-            <button class="action-card" data-action="settings">
-              <div class="action-top"><span class="card-icon settings-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="m19.4 15 .1.1a2 2 0 1 1-2.8 2.8l-.1-.1a2 2 0 0 0-3.4 1.4v.3a2 2 0 1 1-4 0v-.2A2 2 0 0 0 5.8 17l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A2 2 0 0 0 1.6 11H1.5a2 2 0 1 1 0-4h.2A2 2 0 0 0 3.1 3.6L3 3.5a2 2 0 1 1 2.8-2.8l.1.1A2 2 0 0 0 9.3-.6v-.2a2 2 0 1 1 4 0v.2a2 2 0 0 0 3.4 1.4l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1A2 2 0 0 0 21 7h.2a2 2 0 1 1 0 4H21a2 2 0 0 0-1.6 4z" transform="translate(1 2) scale(.92)"/></svg></span><span class="card-arrow">↗</span></div>
-              <div class="action-title">НАЛАШТУВАННЯ</div><p>Звук, атмосфера та інші дрібниці — зроби гру своєю.</p>
-              <div class="card-footer"><span><i class="mini-dot"></i><b>ВСЕ ПІД КОНТРОЛЕМ</b></span><span class="footer-arrow">→</span></div>
-            </button>
+        <section class="continue-section" aria-labelledby="continue-title">
+          <div class="section-heading"><div><span class="section-kicker">ТВОЯ ІСТОРІЯ</span><h2 id="continue-title">ПРОДОВЖИТИ ГРУ</h2></div><button class="text-button" data-view="saves">УСІ ЗБЕРЕЖЕННЯ <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h11M10 5l5 5-5 5"/></svg></button></div>
+          <div class="continue-panel" id="recent-save">
+            <span class="continue-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7.5 12 3l8 4.5v9L12 21l-8-4.5zM4 7.5 12 12l8-4.5M12 12v9"/></svg></span>
+            <div class="continue-copy"><b id="recent-save-name">ЩЕ НЕМАЄ ЗБЕРЕЖЕНИХ ІГОР</b><span id="recent-save-detail">Створи нову гру, щоб розпочати свою історію.</span></div>
+            <button class="continue-button" id="continue-button" disabled aria-label="Продовжити останню гру"><span>ПРОДОВЖИТИ</span><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h11M10 5l5 5-5 5"/></svg></button>
           </div>
         </section>
-        <footer class="page-footer"><span>© 2026 COUNTTRASH</span><span>ЗРОБЛЕНО ДЛЯ ТИХ, ХТО ГРАЄ ПО-ВЕЛИКОМУ <i>✦</i></span></footer>
+        <footer class="page-footer"><span>© 2026 COUNTTRASH</span><span>БУДУЙ СВОЄ. ГРАЙ ПО-ВЕЛИКОМУ.</span></footer>
       </div>
     </main>
   </div>
 
+  <nav class="mobile-nav" aria-label="Швидка навігація">
+    <button class="mobile-nav-item active" data-view="home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/></svg><span>ГОЛОВНА</span></button>
+    <button class="mobile-nav-item" data-view="saves"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h12l3 3v13H4V4zM8 4v6h8V4M8 20v-7h8v7"/></svg><span>ЗБЕРЕЖЕННЯ</span></button>
+    <button class="mobile-nav-item mobile-new" data-action="new"><span class="mobile-plus"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span><span>НОВА ГРА</span></button>
+  </nav>
+
   <dialog class="modal" id="new-game-modal">
-    <form method="dialog" class="modal-close-wrap"><button class="modal-close" aria-label="Закрити">×</button></form>
+    <form method="dialog" class="modal-close-wrap"><button class="modal-close" aria-label="Закрити"><svg viewBox="0 0 20 20"><path d="m5 5 10 10M15 5 5 15"/></svg></button></form>
     <div class="modal-eyebrow"><span class="live-pip"></span> НОВИЙ СТАРТ</div><h2>ЗАСНУЙ <em>ІМПЕРІЮ</em></h2><p class="modal-intro">Назви свій бізнес. Порт уже чекає.</p>
-    <form id="new-game-form" class="modal-form"><label for="business-name">НАЗВА БІЗНЕСУ</label><input id="business-name" maxlength="24" placeholder="Наприклад, Чорний контейнер" required /><div class="form-hint">До 24 символів · назву можна змінити пізніше</div><label class="difficulty-label">РІВЕНЬ СКЛАДНОСТІ</label><div class="difficulty-options"><label class="difficulty-option selected"><input type="radio" name="difficulty" value="normal" checked /><span><b>СТАНДАРТ</b><small>Для першого рейсу</small></span><i>✓</i></label><label class="difficulty-option"><input type="radio" name="difficulty" value="hard" /><span><b>ЖОРСТКО</b><small>Ризик — це прибуток</small></span><i>✓</i></label></div><button class="primary-button modal-submit" type="submit"><span>ВІДКРИТИ БІЗНЕС</span><b>↗</b></button></form>
+    <form id="new-game-form" class="modal-form"><label for="business-name">НАЗВА БІЗНЕСУ</label><input id="business-name" maxlength="24" placeholder="Наприклад, Чорний контейнер" required /><div class="form-hint">До 24 символів · назву можна змінити пізніше</div><label class="difficulty-label">РІВЕНЬ СКЛАДНОСТІ</label><div class="difficulty-options"><label class="difficulty-option selected"><input type="radio" name="difficulty" value="normal" checked /><span class="difficulty-icon"><svg viewBox="0 0 24 24"><path d="M4 19V9l8-5 8 5v10H4zM8 19v-6h8v6"/></svg></span><span><b>СТАНДАРТ</b><small>Для першого рейсу</small></span><i>✓</i></label><label class="difficulty-option"><input type="radio" name="difficulty" value="hard" /><span class="difficulty-icon danger"><svg viewBox="0 0 24 24"><path d="M12 3 22 20H2L12 3zM12 9v5m0 3h.01"/></svg></span><span><b>ЖОРСТКО</b><small>Ризик — це прибуток</small></span><i>✓</i></label></div><button class="primary-button modal-submit" type="submit"><span>ВІДКРИТИ БІЗНЕС</span><svg viewBox="0 0 20 20"><path d="M4 16 16 4M6 4h10v10"/></svg></button></form>
   </dialog>
-  <dialog class="modal compact-modal" id="profile-modal"><form method="dialog" class="modal-close-wrap"><button class="modal-close" aria-label="Закрити">×</button></form><div class="modal-eyebrow"><span class="live-pip"></span> ОСОБИСТІ ДАНІ</div><h2>ТВІЙ <em>ПРОФІЛЬ</em></h2><p class="modal-intro">Як тебе називатимуть у порту?</p><form id="profile-form" class="modal-form"><label for="player-name">ІМ'Я ГРАВЦЯ</label><input id="player-name" maxlength="20" placeholder="Гравець" required /><button class="primary-button modal-submit" type="submit"><span>ЗБЕРЕГТИ ЗМІНИ</span><b>✓</b></button></form></dialog>
-  <dialog class="modal compact-modal" id="settings-modal"><form method="dialog" class="modal-close-wrap"><button class="modal-close" aria-label="Закрити">×</button></form><div class="modal-eyebrow"><span class="live-pip"></span> ПІД ТВОЇ ПРАВИЛА</div><h2>НАЛАШТУ<span>ВАННЯ</span></h2><p class="modal-intro">Обери, як звучатиме твій порт.</p><div class="settings-list"><label class="setting-row"><span><b>Звукові ефекти</b><small>Атмосфера порту та сповіщення</small></span><input type="checkbox" id="sound-toggle" class="switch" checked /><i></i></label><label class="setting-row"><span><b>Рухомий фон</b><small>Анімації та атмосферні ефекти</small></span><input type="checkbox" id="motion-toggle" class="switch" checked /><i></i></label><label class="setting-row"><span><b>Підказки</b><small>Допомога під час першої гри</small></span><input type="checkbox" id="hints-toggle" class="switch" checked /><i></i></label></div><button class="primary-button modal-submit" id="settings-done"><span>ГОТОВО</span><b>✓</b></button></dialog>
-  <dialog class="modal" id="saves-modal"><form method="dialog" class="modal-close-wrap"><button class="modal-close" aria-label="Закрити">×</button></form><div class="modal-eyebrow"><span class="live-pip"></span> ТВОЯ ІСТОРІЯ</div><h2>ЗБЕРЕЖЕНІ <em>ІГРИ</em></h2><p class="modal-intro">Продовжуй будувати свою імперію.</p><div id="saves-list" class="saves-list"></div><button class="primary-button modal-submit" data-action="new"><span>СТВОРИТИ НОВУ ГРУ</span><b>＋</b></button></dialog>
-  <dialog class="modal game-modal" id="game-modal"><form method="dialog" class="modal-close-wrap"><button class="modal-close" aria-label="Закрити">×</button></form><div class="modal-eyebrow"><span class="live-pip"></span> ТВОЯ ІМПЕРІЯ · <span id="game-difficulty">СТАНДАРТ</span></div><h2 id="game-title">БІЗНЕС</h2><p class="modal-intro">Перший день. Перший контейнер. Усе починається з одного рішення.</p><div class="game-stats"><div><small>КАПІТАЛ</small><b>$ 25,000</b></div><div><small>КОНТЕЙНЕРИ</small><b>01 <i>В ДОРОЗІ</i></b></div><div><small>РЕПУТАЦІЯ</small><b>НОВИЙ БОС</b></div></div><div class="game-message"><span>◈</span><p>Твій перший контейнер прибуде до порту сьогодні. Що в ньому — сюрприз. Готовий ризикнути?</p></div><button class="primary-button modal-submit" id="save-game"><span>ЗБЕРЕГТИ І ВИЙТИ</span><b>✓</b></button></dialog>
+
+  <dialog class="modal compact-modal" id="profile-modal"><form method="dialog" class="modal-close-wrap"><button class="modal-close" aria-label="Закрити"><svg viewBox="0 0 20 20"><path d="m5 5 10 10M15 5 5 15"/></svg></button></form><div class="modal-eyebrow"><span class="live-pip"></span> ОСОБИСТІ ДАНІ</div><h2>ТВІЙ <em>ПРОФІЛЬ</em></h2><p class="modal-intro">Як тебе називатимуть у порту?</p><form id="profile-form" class="modal-form"><label for="player-name">ІМ'Я ГРАВЦЯ</label><input id="player-name" maxlength="20" placeholder="Гравець" required /><button class="primary-button modal-submit" type="submit"><span>ЗБЕРЕГТИ ЗМІНИ</span><svg viewBox="0 0 20 20"><path d="m4 10 4 4 8-8"/></svg></button></form></dialog>
+
+  <dialog class="modal compact-modal" id="settings-modal"><form method="dialog" class="modal-close-wrap"><button class="modal-close" aria-label="Закрити"><svg viewBox="0 0 20 20"><path d="m5 5 10 10M15 5 5 15"/></svg></button></form><div class="modal-eyebrow"><span class="live-pip"></span> ПІД ТВОЇ ПРАВИЛА</div><h2>НАЛАШТУ<span>ВАННЯ</span></h2><p class="modal-intro">Обери, як звучатиме твій порт.</p><div class="settings-list"><label class="setting-row"><span class="setting-icon"><svg viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4zM15 9a5 5 0 0 1 0 6m3-9a9 9 0 0 1 0 12"/></svg></span><span class="setting-copy"><b>Звукові ефекти</b><small>Атмосфера порту та сповіщення</small></span><input type="checkbox" id="sound-toggle" class="switch" checked /><i class="switch-ui"></i></label><label class="setting-row"><span class="setting-icon"><svg viewBox="0 0 24 24"><path d="M12 3v3m0 12v3M3 12h3m12 0h3M5.6 5.6l2.1 2.1m8.6 8.6 2.1 2.1m0-12.8-2.1 2.1m-8.6 8.6-2.1 2.1"/><circle cx="12" cy="12" r="4"/></svg></span><span class="setting-copy"><b>Рухомий фон</b><small>Анімації та атмосферні ефекти</small></span><input type="checkbox" id="motion-toggle" class="switch" checked /><i class="switch-ui"></i></label><label class="setting-row"><span class="setting-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.6 2.6 0 1 1 4.5 1.8c-1.1 1-2 1.3-2 3m0 3h.01"/></svg></span><span class="setting-copy"><b>Підказки</b><small>Допомога під час першої гри</small></span><input type="checkbox" id="hints-toggle" class="switch" checked /><i class="switch-ui"></i></label></div><button class="primary-button modal-submit" id="settings-done"><span>ГОТОВО</span><svg viewBox="0 0 20 20"><path d="m4 10 4 4 8-8"/></svg></button></dialog>
+
+  <dialog class="modal" id="saves-modal"><form method="dialog" class="modal-close-wrap"><button class="modal-close" aria-label="Закрити"><svg viewBox="0 0 20 20"><path d="m5 5 10 10M15 5 5 15"/></svg></button></form><div class="modal-eyebrow"><span class="live-pip"></span> ТВОЯ ІСТОРІЯ</div><h2>ЗБЕРЕЖЕНІ <em>ІГРИ</em></h2><p class="modal-intro">Продовжуй будувати свою імперію.</p><div id="saves-list" class="saves-list"></div><button class="primary-button modal-submit" data-action="new"><span>СТВОРИТИ НОВУ ГРУ</span><svg viewBox="0 0 20 20"><path d="M10 4v12M4 10h12"/></svg></button></dialog>
+
+  <dialog class="modal game-modal" id="game-modal"><form method="dialog" class="modal-close-wrap"><button class="modal-close" aria-label="Закрити"><svg viewBox="0 0 20 20"><path d="m5 5 10 10M15 5 5 15"/></svg></button></form><div class="modal-eyebrow"><span class="live-pip"></span> ТВОЯ ІМПЕРІЯ · <span id="game-difficulty">СТАНДАРТ</span></div><h2 id="game-title">БІЗНЕС</h2><p class="modal-intro">Перший день. Перший контейнер. Усе починається з одного рішення.</p><div class="game-stats"><div><svg viewBox="0 0 24 24"><path d="M3 7h18v13H3zM7 7V4h10v3m-5 4v5m-2-2 2 2 2-2"/></svg><small>КАПІТАЛ</small><b>$ 25,000</b></div><div><svg viewBox="0 0 24 24"><path d="m4 7.5 8-4.5 8 4.5v9L12 21l-8-4.5zM4 7.5 12 12l8-4.5M12 12v9"/></svg><small>КОНТЕЙНЕРИ</small><b>01 <i>В ДОРОЗІ</i></b></div><div><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2z"/></svg><small>РЕПУТАЦІЯ</small><b>НОВИЙ БОС</b></div></div><div class="game-message"><svg viewBox="0 0 24 24"><path d="m12 3 2.2 6.8L21 12l-6.8 2.2L12 21l-2.2-6.8L3 12l6.8-2.2z"/></svg><p>Твій перший контейнер прибуде до порту сьогодні. Що в ньому — сюрприз. Готовий ризикнути?</p></div><button class="primary-button modal-submit" id="save-game"><span>ЗБЕРЕГТИ І ВИЙТИ</span><svg viewBox="0 0 20 20"><path d="m4 10 4 4 8-8"/></svg></button></dialog>
   <div class="toast" id="toast" role="status"></div>
   <script src="app.js"></script>
 </body>
