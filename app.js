@@ -61,8 +61,24 @@
   function money(value) { return '$ ' + Math.floor(Number(value) || 0).toLocaleString('en-US'); }
   function cityName(save) { return save.cityName || save.business || 'Портове місто'; }
   function showToast(text) {
-    const toast = $('#toast'); toast.textContent = text; toast.classList.add('show');
-    clearTimeout(toastTimer); toastTimer = setTimeout(() => toast.classList.remove('show'), 2500);
+    const openModal = Object.values(dialogs).find(dialog => dialog.open);
+    let toast;
+    if (openModal?.id === 'game-modal') toast = $('#game-toast');
+    else if (openModal) {
+      toast = $('.modal-toast', openModal);
+      if (!toast) {
+        toast = document.createElement('div');
+        toast.className = 'toast modal-toast';
+        toast.setAttribute('role', 'status');
+        toast.setAttribute('aria-live', 'polite');
+        openModal.append(toast);
+      }
+    } else toast = $('#toast');
+    $$('.toast.show').forEach(item => item.classList.remove('show'));
+    toast.textContent = text;
+    toast.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove('show'), 2500);
   }
   function saveData(save = getCurrent()) {
     if (!save) return;
@@ -132,6 +148,14 @@
   function itemById(id) { return CATALOG.find(item=>item.id===id); }
   function buildingIncome(building) { const item=itemById(building.type); return item ? item.income*(1+((building.level||1)-1)*.5) : 0; }
   function incomePerMinute(save) { return save.buildings.reduce((sum,building)=>sum+buildingIncome(building),0); }
+  function accrueIncome(save,now=Date.now()) {
+    if(!save)return 0;
+    const elapsed=Math.max(0,Math.min(now-(Number(save.lastTick)||now),60*60*1000));
+    const earned=incomePerMinute(save)*elapsed/60000;
+    if(earned>0)save.cash+=earned;
+    save.lastTick=now;
+    return earned;
+  }
   function upgradeCost(building) { const item=itemById(building.type); return item ? Math.round(item.cost*(.45+((building.level||1)-1)*.25)) : 0; }
   function updateMapHint() {
     const hint=$('#map-hint'),float=$('#map-placement-hint');
@@ -191,6 +215,7 @@
     if(pendingBuildId){
       const item=itemById(pendingBuildId);if(!item)return;
       if(!canPlace(position.x,position.y)){showToast('Тут уже є будівля. Обери інше місце.');return;}
+      accrueIncome(save);
       if(save.cash<item.cost){showToast('Не вистачає коштів.');pendingBuildId=null;renderCity();return;}
       save.cash-=item.cost;save.buildings.push({type:item.id,name:item.name,x:position.x,y:position.y,level:1,invested:item.cost});
       if(item.population)save.population+=item.population;
@@ -204,20 +229,30 @@
   }
   function upgradeSelected(){
     const save=getCurrent(),building=save?.buildings[selectedBuildingIndex],item=building&&itemById(building.type);if(!save||!building||!item)return;
-    const price=upgradeCost(building);if(building.level>=5){showToast('Досягнуто максимального рівня.');return;}if(save.cash<price){showToast('Не вистачає коштів на покращення.');return;}
+    const price=upgradeCost(building);if(building.level>=5){showToast('Досягнуто максимального рівня.');return;}
+    accrueIncome(save);if(save.cash<price){showToast('Не вистачає коштів на покращення.');return;}
     save.cash-=price;building.level++;building.invested+=price;if(item.population)save.population+=item.population;
     saveData(save);updateCity();showToast(`${item.name} покращено до рівня ${building.level}.`);
   }
   function removeSelected(){
     const save=getCurrent(),index=selectedBuildingIndex,building=save?.buildings[index],item=building&&itemById(building.type);if(!save||!building)return;
+    accrueIncome(save);
     const refund=Math.floor((building.invested||0)*.2);save.cash+=refund;if(item?.population)save.population=Math.max(1200,save.population-item.population*(building.level||1));
     save.buildings.splice(index,1);selectedBuildingIndex=null;movingBuildingIndex=null;pendingBuildId=null;saveData(save);updateCity();showToast(`Будівлю знесено. Повернуто ${money(refund)} (20%).`);
   }
   function renderCaseBalance() { const save=getCurrent(); if(save) $('#container-cash').textContent=money(save.cash); }
+  function recoverPendingCase(save) {
+    if(!save.pendingCase)return null;
+    const value=Number(save.pendingCase.reward?.value),valid=Number.isFinite(value)&&value>=0;
+    if(valid){save.cash+=value;save.casesOpened=(save.casesOpened||0)+1;}else save.cash+=1000;
+    save.pendingCase=null;
+    return valid;
+  }
   function launchGame(id) {
     const save=saves.find(item=>item.id===id); if(!save)return;
-    normalizeSave(save); currentSaveId=save.id; save.lastTick=Date.now();pendingBuildId=null;selectedBuildingIndex=null;movingBuildingIndex=null;
-    switchGameTab('city'); updateCity(); openDialog('game-modal');
+    normalizeSave(save);const recoveredCase=recoverPendingCase(save);currentSaveId=save.id;save.lastTick=Date.now();pendingBuildId=null;selectedBuildingIndex=null;movingBuildingIndex=null;
+    switchGameTab('city');updateCity();openDialog('game-modal');
+    if(recoveredCase!==null){saveData(save);showToast(recoveredCase?'Перерване відкриття кейса відновлено — нагороду збережено.':'Нагороду кейса не вдалося відновити. Кошти повернуто.');}
   }
   function switchGameTab(tab) {
     $$('.game-tab').forEach(btn=>btn.classList.toggle('active',btn.dataset.gameTab===tab));
@@ -226,7 +261,7 @@
     if(tab==='containers') renderCaseBalance();
   }
   function closeGame() {
-    const save=getCurrent(); if(save){save.lastTick=Date.now();saveData(save);}
+    const save=getCurrent(); if(save){accrueIncome(save);saveData(save);}
     if(dialogs['game-modal'].open) dialogs['game-modal'].close();
     currentSaveId=null; showToast('Місто збережено. До зустрічі!');
   }
@@ -258,26 +293,32 @@
   $('#game-modal').addEventListener('cancel',event=>{event.preventDefault();if(!$('#case-overlay').hidden){if(caseCanClose)hideCaseOverlay();return;}closeGame();});
   $('#continue-button').addEventListener('click',()=>{if(saves[0])launchGame(saves[0].id);});
   function weightedReward(type){const items=REWARDS[type];let roll=Math.random()*items.reduce((s,x)=>s+x.weight,0);for(const item of items){roll-=item.weight;if(roll<=0)return item;}return items[0];}
-  function startCase(type){
+  async function startCase(type){
+    if (!$('#case-overlay').hidden) return;
     const save=getCurrent();if(!save)return;
+    clearTimeout(caseTimer);
     const price=1000;
+    accrueIncome(save);
     if(save.cash<price){showToast('Не вистачає коштів на цей контейнер.');return;}
-    save.cash-=price;save.lastTick=Date.now();saveData(save);updateCity();
     const reward=weightedReward(type),src=type==='cars'?'public/container-cars.jpg':'public/container-arms.jpg';
+    save.cash-=price;save.pendingCase={type,reward};saveData(save);updateCity();
     const track=$('#roulette-track'),winnerIndex=23;
     const spinMs=document.body.classList.contains('reduce-motion')?250:8800;
     const cards=Array.from({length:29},(_,i)=>i===winnerIndex?reward:weightedReward(type));
-    track.innerHTML=cards.map((item,i)=>`<div class="roulette-item ${item.rarity}" data-index="${i}"><img src="${item.image||src}" alt="${escapeHtml(item.name)}" loading="lazy"/><small>${item.rarity==='legendary'?'★ ЛЕГЕНДАРНЕ':item.rarity==='epic'?'◆ ЕПІЧНЕ':item.rarity==='rare'?'● РІДКІСНЕ':'ЗВИЧАЙНЕ'}</small><span>${escapeHtml(item.name)}</span></div>`).join('');
+    track.innerHTML=cards.map((item,i)=>`<div class="roulette-item ${item.rarity}" data-index="${i}"><img src="${item.image||src}" alt="${escapeHtml(item.name)}"/><small>${item.rarity==='legendary'?'★ ЛЕГЕНДАРНЕ':item.rarity==='epic'?'◆ ЕПІЧНЕ':item.rarity==='rare'?'● РІДКІСНЕ':'ЗВИЧАЙНЕ'}</small><span>${escapeHtml(item.name)}</span></div>`).join('');
     $('#case-opening-title').textContent=type==='cars'?'АВТОМОБІЛЬНИЙ КОНТЕЙНЕР':'КОНТЕЙНЕР З АРСЕНАЛОМ';
-    $('#case-opening-subtitle').textContent='Вантаж на шляху…';$('#case-result').hidden=true;$('#case-close').disabled=true;caseCanClose=false;
+    $('#case-opening-subtitle').textContent='Завантажуємо нагороди…';$('#case-result').hidden=true;$('#case-close').disabled=true;caseCanClose=false;
     const overlay=$('#case-overlay');overlay.hidden=false;track.style.transition='none';track.style.transform='translateX(0px)';
+    await Promise.all([...track.querySelectorAll('img')].map(image=>image.complete?Promise.resolve():new Promise(resolve=>{image.addEventListener('load',resolve,{once:true});image.addEventListener('error',resolve,{once:true});})));
+    if(overlay.hidden)return;
+    $('#case-opening-subtitle').textContent='Вантаж на шляху…';
     requestAnimationFrame(()=>requestAnimationFrame(()=>{
       const winner=track.querySelector(`[data-index="${winnerIndex}"]`),windowBox=$('.roulette-window');
       const offset=windowBox.clientWidth/2-(winner.offsetLeft+winner.offsetWidth/2);
       track.style.transition=`transform ${spinMs}ms cubic-bezier(.10,.72,.08,1)`;track.style.transform=`translateX(${offset}px)`;
     }));
     let settled=false;
-    const finish=()=>{if(settled)return;settled=true;clearTimeout(caseTimer);save.cash+=reward.value;save.casesOpened=(save.casesOpened||0)+1;save.lastTick=Date.now();saveData(save);updateCity();$('#case-opening-subtitle').textContent='Контейнер відкрито. Ось що тобі дісталось:';$('#result-name').textContent=reward.name.toLocaleUpperCase('uk');$('#result-value').textContent=`+${money(reward.value)}`;$('#case-result').hidden=false;$('#case-close').disabled=false;caseCanClose=true;};
+    const finish=()=>{if(settled)return;settled=true;clearTimeout(caseTimer);accrueIncome(save);save.cash+=reward.value;save.pendingCase=null;save.casesOpened=(save.casesOpened||0)+1;saveData(save);updateCity();$('#case-opening-subtitle').textContent='Контейнер відкрито. Ось що тобі дісталось:';$('#result-name').textContent=reward.name.toLocaleUpperCase('uk');$('#result-value').textContent=`+${money(reward.value)}`;$('#case-result').hidden=false;$('#case-close').disabled=false;caseCanClose=true;};
     track.addEventListener('transitionend',finish,{once:true});caseTimer=setTimeout(finish,spinMs+500);
   }
   $$('[data-open-case]').forEach(button=>button.addEventListener('click',()=>startCase(button.dataset.openCase)));
@@ -293,11 +334,13 @@
   $('#settings-done').addEventListener('click',()=>{closeDialogs();showToast('Налаштування збережено.');});
 
   setInterval(()=>{
-    const save=getCurrent();if(!save||!dialogs['game-modal'].open||!$('#case-overlay').hidden)return;
-    const now=Date.now(),elapsed=Math.max(0,Math.min(now-(Number(save.lastTick)||now),60*60*1000));
-    const income=incomePerMinute(save);if(income>0&&elapsed>0)save.cash+=income*elapsed/60000;
-    save.lastTick=now;try{localStorage.setItem(SAVE_KEY,JSON.stringify(saves));}catch{}
+    const save=getCurrent();if(!save||!dialogs['game-modal'].open)return;
+    const income=incomePerMinute(save);accrueIncome(save);try{localStorage.setItem(SAVE_KEY,JSON.stringify(saves));}catch{}
     $('#city-cash').textContent=money(save.cash);$('#container-cash').textContent=money(save.cash);$('#city-income').textContent=money(income);
     $$('[data-select-build]').forEach(btn=>{const item=itemById(btn.dataset.selectBuild);btn.disabled=!item||save.cash<item.cost||save.buildings.length>=MAX_BUILDINGS;});
   },5000);
+  window.addEventListener('pagehide',()=>{
+    const save=getCurrent();if(!save||!dialogs['game-modal'].open)return;
+    accrueIncome(save);try{localStorage.setItem(SAVE_KEY,JSON.stringify(saves));}catch{}
+  });
 })();
