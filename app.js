@@ -17,6 +17,10 @@
   let toastTimer = null;
   let caseTimer = null;
   let caseCanClose = false;
+  let pendingBuildId = null;
+  let selectedBuildingIndex = null;
+  let movingBuildingIndex = null;
+  const MAX_BUILDINGS = 24;
 
   const icon = {
     shop:'<svg viewBox="0 0 24 24"><path d="M3 10h18l-2-6H5l-2 6Zm2 0v10h14V10M9 20v-6h6v6M3 10a3 3 0 0 0 6 0 3 3 0 0 0 6 0 3 3 0 0 0 6 0"/></svg>',
@@ -32,21 +36,22 @@
     {id:'warehouse',name:'Логістичний склад',kind:'business',cost:49000,income:980,icon:icon.warehouse,desc:'Вантажі ніколи не сплять'},
     {id:'home',name:'Житловий будинок',kind:'housing',cost:18000,income:105,population:120,icon:icon.home,desc:'+120 мешканців · стабільна оренда'}
   ];
-  const LOTS = [{x:18,y:28},{x:47,y:26},{x:76,y:30},{x:28,y:70},{x:59,y:68},{x:83,y:70}];
   const REWARDS = {
     cars:[
-      {name:'Уживаний седан',value:3200,rarity:'common',weight:36},
-      {name:'Міський хетчбек',value:7800,rarity:'common',weight:30},
-      {name:'Класичне купе',value:18500,rarity:'rare',weight:19},
-      {name:'Спортивний суперкар',value:46000,rarity:'epic',weight:11},
-      {name:'Колекційний GT',value:105000,rarity:'legendary',weight:4}
+      {name:'Hyundai Elantra',value:250,rarity:'common',weight:37},
+      {name:'Volkswagen Golf GTI',value:450,rarity:'common',weight:30},
+      {name:'BMW M3',value:1700,rarity:'rare',weight:18},
+      {name:'Porsche 911 GT3 RS',value:6500,rarity:'epic',weight:9},
+      {name:'Ferrari SF90 Stradale',value:18000,rarity:'epic',weight:4},
+      {name:'Bugatti Chiron',value:45000,rarity:'legendary',weight:2}
     ],
     arms:[
-      {name:'Компактний пістолет',value:3800,rarity:'common',weight:36},
-      {name:'Польовий карабін',value:9500,rarity:'common',weight:30},
-      {name:'Тактична гвинтівка',value:24000,rarity:'rare',weight:19},
-      {name:'Рідкісний прототип',value:58000,rarity:'epic',weight:11},
-      {name:'Колекційний арсенал',value:115000,rarity:'legendary',weight:4}
+      {name:'Glock 17',value:250,rarity:'common',weight:37},
+      {name:'MP5',value:500,rarity:'common',weight:31},
+      {name:'AK-47',value:1700,rarity:'rare',weight:18},
+      {name:'M4A1',value:7000,rarity:'epic',weight:9},
+      {name:'Desert Eagle',value:15000,rarity:'epic',weight:4},
+      {name:'AWP',value:40000,rarity:'legendary',weight:1}
     ]
   };
 
@@ -66,12 +71,19 @@
   function getCurrent() { return saves.find(item => item.id === currentSaveId) || null; }
   function normalizeSave(save) {
     save.cityName = cityName(save);
-    if (!Number.isFinite(Number(save.cash))) save.cash = 70000;
-    else save.cash = Number(save.cash);
+    save.cash = Number.isFinite(Number(save.cash)) ? Number(save.cash) : 70000;
     if (!Array.isArray(save.buildings)) save.buildings = [];
-    if (!Number.isFinite(Number(save.population))) save.population = 1200;
-    if (!Number.isFinite(Number(save.casesOpened))) save.casesOpened = 0;
-    if (!Number.isFinite(Number(save.lastTick))) save.lastTick = Date.now();
+    save.population = Number.isFinite(Number(save.population)) ? Number(save.population) : 1200;
+    save.casesOpened = Number.isFinite(Number(save.casesOpened)) ? Number(save.casesOpened) : 0;
+    save.lastTick = Number.isFinite(Number(save.lastTick)) ? Number(save.lastTick) : Date.now();
+    save.buildings.forEach((building,index) => {
+      const item = CATALOG.find(entry => entry.id === building.type);
+      const fallback = {x:12+(index%6)*15.2,y:18+Math.floor(index/6)*21};
+      if (!Number.isFinite(Number(building.x))) building.x = fallback.x;
+      if (!Number.isFinite(Number(building.y))) building.y = fallback.y;
+      building.level = Math.max(1,Number(building.level)||1);
+      building.invested = Math.max(0,Number(building.invested)||item?.cost||0);
+    });
     return save;
   }
   function closeDialogs(except = null) { Object.values(dialogs).forEach(d => { if (d !== except && d.open) d.close(); }); }
@@ -115,44 +127,94 @@
     $$('[data-view]').forEach(item=>item.classList.toggle('active',item.dataset.view===view));
     $('#breadcrumb-current').textContent = view==='saves'?'ЗБЕРЕЖЕНІ ІГРИ':'ГОЛОВНА';
   }
-  function incomePerMinute(save) { return save.buildings.reduce((sum,b)=>sum+(CATALOG.find(item=>item.id===b.type)?.income||0),0); }
-  function updateCity() {
-    const save = getCurrent(); if (!save) return;
-    normalizeSave(save);
-    $('#game-title').textContent = cityName(save).toLocaleUpperCase('uk');
-    $('#city-heading').textContent = cityName(save).toLocaleUpperCase('uk');
-    $('#city-cash').textContent = money(save.cash); $('#container-cash').textContent = money(save.cash);
-    $('#city-income').textContent = money(incomePerMinute(save));
-    $('#city-population').textContent = Number(save.population).toLocaleString('uk-UA');
-    $('#building-count').textContent = `${save.buildings.length} / ${LOTS.length}`;
-    $('#build-panel-count').textContent = `${save.buildings.length}/${LOTS.length}`;
-    $('#cases-count').textContent = Number(save.casesOpened)||0;
-    const map = $('#map-lots');
-    map.innerHTML = LOTS.map((pos,index)=>{
-      const building=save.buildings[index];
-      if(!building) return `<div class="city-lot empty" style="--x:${pos.x}%;--y:${pos.y}%"><span class="lot-icon"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span><b>ВІЛЬНА ДІЛЯНКА</b></div>`;
-      const item=CATALOG.find(entry=>entry.id===building.type);
-      return `<div class="city-lot occupied" style="--x:${pos.x}%;--y:${pos.y}%"><span class="lot-icon">${item?.icon||icon.warehouse}</span><b>${escapeHtml(item?.name||building.name||'Будівля')}</b><small>+${money(item?.income||0)}/ХВ</small></div>`;
-    }).join('');
-    const buildList=$('#build-list');
-    buildList.innerHTML=CATALOG.map(item=>`<article class="build-card"><span class="build-icon">${item.icon}</span><span class="build-copy"><b>${item.name}</b><small>${item.desc}<br><strong>+${money(item.income)}/хв</strong></small></span><button class="build-buy" data-build="${item.id}" ${save.cash<item.cost||save.buildings.length>=LOTS.length?'disabled':''}>${money(item.cost)}</button></article>`).join('');
-    $$('[data-build]',buildList).forEach(btn=>btn.addEventListener('click',()=>build(itemById(btn.dataset.build))));
-    renderCaseBalance();
-  }
   function itemById(id) { return CATALOG.find(item=>item.id===id); }
-  function build(item) {
-    const save=getCurrent(); if(!save||!item)return;
-    if(save.buildings.length>=LOTS.length){showToast('Усі ділянки вже забудовані.');return;}
+  function buildingIncome(building) { const item=itemById(building.type); return item ? item.income*(1+((building.level||1)-1)*.5) : 0; }
+  function incomePerMinute(save) { return save.buildings.reduce((sum,building)=>sum+buildingIncome(building),0); }
+  function upgradeCost(building) { const item=itemById(building.type); return item ? Math.round(item.cost*(.45+((building.level||1)-1)*.25)) : 0; }
+  function updateMapHint() {
+    const hint=$('#map-hint'),float=$('#map-placement-hint');
+    const active=!!pendingBuildId||movingBuildingIndex!==null;
+    hint.textContent=pendingBuildId?'ТАПНИ ВІЛЬНЕ МІСЦЕ НА КАРТІ':movingBuildingIndex!==null?'ТАПНИ НОВЕ МІСЦЕ ДЛЯ БУДІВЛІ':'ОБИРАЙ БУДІВЛІ ПРАВОРУЧ';
+    float.hidden=!active; float.textContent=pendingBuildId?'ОБЕРИ МІСЦЕ ДЛЯ БУДІВНИЦТВА':'ОБЕРИ НОВЕ МІСЦЕ';
+    $('#map-surface').classList.toggle('placing',active);
+  }
+  function renderSelectionPanel(save) {
+    const panel=$('#selection-panel'),list=$('#build-list'),heading=$('#build-action-title');
+    if(selectedBuildingIndex!==null&&save.buildings[selectedBuildingIndex]){
+      const building=save.buildings[selectedBuildingIndex],item=itemById(building.type),cost=upgradeCost(building),refund=Math.floor(building.invested*.2),income=buildingIncome(building),maxed=building.level>=5;
+      heading.textContent='КЕРУВАННЯ'; list.hidden=true; panel.hidden=false;
+      panel.innerHTML=`<div class="selected-building"><span class="build-icon">${item?.icon||icon.warehouse}</span><span><b>${escapeHtml(item?.name||building.name||'Будівля')}</b><small>РІВЕНЬ ${building.level} · +${money(income)}/ХВ</small></span></div><p class="selection-hint">${movingBuildingIndex===selectedBuildingIndex?'Тапни нове місце на карті, щоб переставити будівлю.':'Покращуй будівлю або перемісти її на вільне місце.'}</p><div class="selection-actions"><button class="upgrade-building" data-upgrade ${maxed||save.cash<cost?'disabled':''}><span>ПОКРАЩИТИ</span><small>${maxed?'МАКС. РІВЕНЬ':money(cost)}</small></button><button class="move-building" data-move-building>ПЕРЕМІСТИТИ</button><button class="remove-building" data-remove-building>ЗНЕСТИ <small>+${money(refund)}</small></button><button class="clear-selection" data-clear-selection aria-label="Закрити">×</button></div>`;
+      $('[data-upgrade]',panel)?.addEventListener('click',upgradeSelected);
+      $('[data-move-building]',panel)?.addEventListener('click',()=>{pendingBuildId=null;movingBuildingIndex=selectedBuildingIndex;updateMapHint();renderSelectionPanel(save);showToast('Тепер вибери вільне місце на карті.');});
+      $('[data-remove-building]',panel)?.addEventListener('click',removeSelected);
+      $('[data-clear-selection]',panel)?.addEventListener('click',()=>{selectedBuildingIndex=null;movingBuildingIndex=null;renderCity();});
+    } else if(pendingBuildId){
+      const item=itemById(pendingBuildId);heading.textContent='ОБЕРИ МІСЦЕ';list.hidden=false;panel.hidden=false;
+      panel.innerHTML=`<p class="selection-hint selected-build-hint">${item?.name||'Будівля'} вибрана. Тапни вільне місце на карті, щоб побудувати за ${money(item?.cost||0)}.</p><button class="cancel-build" data-cancel-build>СКАСУВАТИ ВИБІР</button>`;
+      $('[data-cancel-build]',panel).addEventListener('click',()=>{pendingBuildId=null;renderCity();});
+    }else{heading.textContent='ЩО БУДУЄМО?';list.hidden=false;panel.hidden=true;panel.innerHTML='';}
+  }
+  function updateCity() {
+    const save=getCurrent(); if(!save)return; normalizeSave(save);
+    $('#game-title').textContent=cityName(save).toLocaleUpperCase('uk');
+    $('#city-heading').textContent=cityName(save).toLocaleUpperCase('uk');
+    $('#city-cash').textContent=money(save.cash);$('#container-cash').textContent=money(save.cash);
+    $('#city-income').textContent=money(incomePerMinute(save));$('#city-population').textContent=Number(save.population).toLocaleString('uk-UA');
+    $('#building-count').textContent=`${save.buildings.length} / ${MAX_BUILDINGS}`;$('#build-panel-count').textContent=`${save.buildings.length}/${MAX_BUILDINGS}`;$('#cases-count').textContent=Number(save.casesOpened)||0;
+    $('#map-lots').innerHTML=save.buildings.map((building,index)=>{const item=itemById(building.type),level=building.level||1;return `<button class="city-lot occupied ${selectedBuildingIndex===index?'selected':''}" data-building-index="${index}" aria-label="${escapeHtml(item?.name||building.name||'Будівля')}, рівень ${level}" style="--x:${building.x}%;--y:${building.y}%"><span class="lot-icon">${item?.icon||icon.warehouse}</span><b>${escapeHtml(item?.name||building.name||'Будівля')}</b><small>РІВ. ${level} · +${money(buildingIncome(building))}/ХВ</small></button>`;}).join('');
+    const buildList=$('#build-list');
+    buildList.innerHTML=CATALOG.map(item=>`<article class="build-card ${pendingBuildId===item.id?'selected':''}"><span class="build-icon">${item.icon}</span><span class="build-copy"><b>${item.name}</b><small>+${money(item.income)}/хв</small></span><button class="build-buy" data-select-build="${item.id}" ${save.cash<item.cost||save.buildings.length>=MAX_BUILDINGS?'disabled':''}>${money(item.cost)}</button></article>`).join('');
+    $$('[data-select-build]',buildList).forEach(btn=>btn.addEventListener('click',()=>selectBuild(btn.dataset.selectBuild)));
+    $$('.build-card',buildList).forEach(card=>card.addEventListener('click',event=>{if(event.target.closest('[data-select-build]'))return;const button=$('[data-select-build]',card);if(button&&!button.disabled)selectBuild(button.dataset.selectBuild);}));
+    renderSelectionPanel(save);updateMapHint();renderCaseBalance();
+  }
+  function canPlace(x,y,ignoreIndex=null){
+    const save=getCurrent();if(!save)return false;
+    return !save.buildings.some((building,index)=>index!==ignoreIndex&&Math.abs(building.x-x)<14&&Math.abs(building.y-y)<14);
+  }
+  function selectBuild(type){
+    const save=getCurrent(),item=itemById(type);if(!save||!item)return;
     if(save.cash<item.cost){showToast('Не вистачає коштів для будівництва.');return;}
-    save.cash-=item.cost; save.buildings.push({type:item.id,name:item.name});
-    if(item.population) save.population+=item.population;
-    save.lastTick=Date.now(); saveData(save); updateCity();
-    showToast(`${item.name} збудовано. Дохід +${money(item.income)} за хвилину.`);
+    if(save.buildings.length>=MAX_BUILDINGS){showToast('Місто вже повністю забудоване.');return;}
+    pendingBuildId=type;selectedBuildingIndex=null;movingBuildingIndex=null;renderCity();
+    if(matchMedia('(max-width: 680px)').matches)$('#map-panel').scrollIntoView({behavior:'smooth',block:'center'});
+  }
+  function positionFromEvent(event){
+    const rect=$('#map-surface').getBoundingClientRect();
+    const xMargin=Math.min(15,Math.max(8,60/rect.width*100)),yMargin=Math.min(18,Math.max(9,34/rect.height*100));
+    return {x:Math.round(Math.min(100-xMargin,Math.max(xMargin,(event.clientX-rect.left)/rect.width*100))*10)/10,y:Math.round(Math.min(100-yMargin,Math.max(yMargin,(event.clientY-rect.top)/rect.height*100))*10)/10};
+  }
+  function placeOrMove(position){
+    const save=getCurrent();if(!save)return;
+    if(pendingBuildId){
+      const item=itemById(pendingBuildId);if(!item)return;
+      if(!canPlace(position.x,position.y)){showToast('Тут уже є будівля. Обери інше місце.');return;}
+      if(save.cash<item.cost){showToast('Не вистачає коштів.');pendingBuildId=null;renderCity();return;}
+      save.cash-=item.cost;save.buildings.push({type:item.id,name:item.name,x:position.x,y:position.y,level:1,invested:item.cost});
+      if(item.population)save.population+=item.population;
+      pendingBuildId=null;selectedBuildingIndex=save.buildings.length-1;movingBuildingIndex=null;saveData(save);updateCity();showToast(`${item.name} побудовано · +${money(item.income)}/хв.`);return;
+    }
+    if(movingBuildingIndex!==null){
+      const index=movingBuildingIndex,building=save.buildings[index];if(!building)return;
+      if(!canPlace(position.x,position.y,index)){showToast('Ця ділянка зайнята. Обери інше місце.');return;}
+      building.x=position.x;building.y=position.y;movingBuildingIndex=null;saveData(save);updateCity();showToast('Будівлю переміщено.');
+    }
+  }
+  function upgradeSelected(){
+    const save=getCurrent(),building=save?.buildings[selectedBuildingIndex],item=building&&itemById(building.type);if(!save||!building||!item)return;
+    const price=upgradeCost(building);if(building.level>=5){showToast('Досягнуто максимального рівня.');return;}if(save.cash<price){showToast('Не вистачає коштів на покращення.');return;}
+    save.cash-=price;building.level++;building.invested+=price;if(item.population)save.population+=item.population;
+    saveData(save);updateCity();showToast(`${item.name} покращено до рівня ${building.level}.`);
+  }
+  function removeSelected(){
+    const save=getCurrent(),index=selectedBuildingIndex,building=save?.buildings[index],item=building&&itemById(building.type);if(!save||!building)return;
+    const refund=Math.floor((building.invested||0)*.2);save.cash+=refund;if(item?.population)save.population=Math.max(1200,save.population-item.population*(building.level||1));
+    save.buildings.splice(index,1);selectedBuildingIndex=null;movingBuildingIndex=null;pendingBuildId=null;saveData(save);updateCity();showToast(`Будівлю знесено. Повернуто ${money(refund)} (20%).`);
   }
   function renderCaseBalance() { const save=getCurrent(); if(save) $('#container-cash').textContent=money(save.cash); }
   function launchGame(id) {
     const save=saves.find(item=>item.id===id); if(!save)return;
-    normalizeSave(save); currentSaveId=save.id; save.lastTick=Date.now();
+    normalizeSave(save); currentSaveId=save.id; save.lastTick=Date.now();pendingBuildId=null;selectedBuildingIndex=null;movingBuildingIndex=null;
     switchGameTab('city'); updateCity(); openDialog('game-modal');
   }
   function switchGameTab(tab) {
@@ -179,11 +241,16 @@
     else {closeDialogs();window.scrollTo({top:0,behavior:'smooth'});}
   }));
   $$('[data-game-tab]').forEach(button=>button.addEventListener('click',()=>switchGameTab(button.dataset.gameTab)));
+  $('#map-surface').addEventListener('click',event=>{
+    const marker=event.target.closest('[data-building-index]');
+    if(marker){selectedBuildingIndex=Number(marker.dataset.buildingIndex);pendingBuildId=null;movingBuildingIndex=null;renderCity();return;}
+    if(pendingBuildId||movingBuildingIndex!==null)placeOrMove(positionFromEvent(event));
+  });
   updateProfile(); updateSaves();
   $('#new-game-form').addEventListener('submit',event=>{
     event.preventDefault();const name=$('#city-name').value.trim();if(!name)return;
     const save={id:globalThis.crypto?.randomUUID?.()||`${Date.now()}-${Math.random().toString(16).slice(2)}`,cityName:name,business:name,cash:70000,population:1200,buildings:[],casesOpened:0,lastTick:Date.now(),date:new Date().toLocaleDateString('uk-UA',{day:'2-digit',month:'short',year:'numeric'})};
-    saves.unshift(save);currentSaveId=save.id;saveData(save);updateCity();switchGameTab('city');openDialog('game-modal');
+    saves.unshift(save);currentSaveId=save.id;pendingBuildId=null;selectedBuildingIndex=null;movingBuildingIndex=null;saveData(save);updateCity();switchGameTab('city');openDialog('game-modal');
   });
   $('#exit-game').addEventListener('click',closeGame);
   $('#game-modal').addEventListener('cancel',event=>{event.preventDefault();if(!$('#case-overlay').hidden){if(caseCanClose)hideCaseOverlay();return;}closeGame();});
@@ -191,7 +258,7 @@
   function weightedReward(type){const items=REWARDS[type];let roll=Math.random()*items.reduce((s,x)=>s+x.weight,0);for(const item of items){roll-=item.weight;if(roll<=0)return item;}return items[0];}
   function startCase(type){
     const save=getCurrent();if(!save)return;
-    const price=type==='cars'?6500:9000;
+    const price=1000;
     if(save.cash<price){showToast('Не вистачає коштів на цей контейнер.');return;}
     save.cash-=price;save.lastTick=Date.now();saveData(save);updateCity();
     const reward=weightedReward(type),src=type==='cars'?'public/container-cars.jpg':'public/container-arms.jpg';
@@ -228,6 +295,6 @@
     const income=incomePerMinute(save);if(income>0&&elapsed>0)save.cash+=income*elapsed/60000;
     save.lastTick=now;try{localStorage.setItem(SAVE_KEY,JSON.stringify(saves));}catch{}
     $('#city-cash').textContent=money(save.cash);$('#container-cash').textContent=money(save.cash);$('#city-income').textContent=money(income);
-    $$('[data-build]').forEach(btn=>{const item=itemById(btn.dataset.build);btn.disabled=!item||save.cash<item.cost||save.buildings.length>=LOTS.length;});
+    $$('[data-select-build]').forEach(btn=>{const item=itemById(btn.dataset.selectBuild);btn.disabled=!item||save.cash<item.cost||save.buildings.length>=MAX_BUILDINGS;});
   },5000);
 })();
