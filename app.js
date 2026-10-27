@@ -38,12 +38,14 @@
   ];
   const REWARDS = {
     cars:[
-      {name:'Hyundai Elantra',value:250,rarity:'common',weight:37,image:'public/loot-hyundai-elantra.jpg'},
-      {name:'Volkswagen Golf GTI',value:450,rarity:'common',weight:30,image:'public/loot-vw-golf.jpg'},
-      {name:'BMW M3',value:1700,rarity:'rare',weight:18,image:'public/loot-bmw-m3.jpg'},
-      {name:'Porsche 911 GT3 RS',value:6500,rarity:'epic',weight:9,image:'public/loot-porsche-911.jpg'},
-      {name:'Ferrari SF90 Stradale',value:18000,rarity:'epic',weight:4,image:'public/loot-ferrari-sf90.jpg'},
-      {name:'Bugatti Chiron',value:45000,rarity:'legendary',weight:2,image:'public/loot-bugatti-chiron.jpg'}
+      {name:'Hyundai Elantra',value:250,rarity:'common',weight:28,image:'public/loot-hyundai-elantra.jpg'},
+      {name:'Volkswagen Golf GTI',value:450,rarity:'common',weight:22,image:'public/loot-vw-golf.jpg'},
+      {name:'Mercedes-AMG C 63',value:850,rarity:'common',weight:15,image:'public/loot-mercedes-amg-c63.jpg'},
+      {name:'Audi RS6 Avant',value:1100,rarity:'common',weight:13,image:'public/loot-audi-rs6.jpg'},
+      {name:'BMW M3',value:1700,rarity:'rare',weight:12,image:'public/loot-bmw-m3.jpg'},
+      {name:'Porsche 911 GT3 RS',value:6500,rarity:'epic',weight:6,image:'public/loot-porsche-911.jpg'},
+      {name:'Ferrari SF90 Stradale',value:18000,rarity:'epic',weight:3,image:'public/loot-ferrari-sf90.jpg'},
+      {name:'Bugatti Chiron',value:45000,rarity:'legendary',weight:1,image:'public/loot-bugatti-chiron.jpg'}
     ],
     arms:[
       {name:'Glock 17',value:250,rarity:'common',weight:37,image:'public/loot-glock-17.jpg'},
@@ -262,8 +264,9 @@
     if(save.cash<price){showToast('Не вистачає коштів на цей контейнер.');return;}
     save.cash-=price;save.lastTick=Date.now();saveData(save);updateCity();
     const reward=weightedReward(type),src=type==='cars'?'public/container-cars.jpg':'public/container-arms.jpg';
-    const track=$('#roulette-track'),winnerIndex=15;
-    const cards=Array.from({length:19},(_,i)=>i===winnerIndex?reward:weightedReward(type));
+    const track=$('#roulette-track'),winnerIndex=23;
+    const spinMs=document.body.classList.contains('reduce-motion')?250:8800;
+    const cards=Array.from({length:29},(_,i)=>i===winnerIndex?reward:weightedReward(type));
     track.innerHTML=cards.map((item,i)=>`<div class="roulette-item ${item.rarity}" data-index="${i}"><img src="${item.image||src}" alt="${escapeHtml(item.name)}" loading="lazy"/><small>${item.rarity==='legendary'?'★ ЛЕГЕНДАРНЕ':item.rarity==='epic'?'◆ ЕПІЧНЕ':item.rarity==='rare'?'● РІДКІСНЕ':'ЗВИЧАЙНЕ'}</small><span>${escapeHtml(item.name)}</span></div>`).join('');
     $('#case-opening-title').textContent=type==='cars'?'АВТОМОБІЛЬНИЙ КОНТЕЙНЕР':'КОНТЕЙНЕР З АРСЕНАЛОМ';
     $('#case-opening-subtitle').textContent='Вантаж на шляху…';$('#case-result').hidden=true;$('#case-close').disabled=true;caseCanClose=false;
@@ -271,11 +274,11 @@
     requestAnimationFrame(()=>requestAnimationFrame(()=>{
       const winner=track.querySelector(`[data-index="${winnerIndex}"]`),windowBox=$('.roulette-window');
       const offset=windowBox.clientWidth/2-(winner.offsetLeft+winner.offsetWidth/2);
-      track.style.transition='transform 4.7s cubic-bezier(.12,.72,.08,1)';track.style.transform=`translateX(${offset}px)`;
+      track.style.transition=`transform ${spinMs}ms cubic-bezier(.10,.72,.08,1)`;track.style.transform=`translateX(${offset}px)`;
     }));
     let settled=false;
     const finish=()=>{if(settled)return;settled=true;clearTimeout(caseTimer);save.cash+=reward.value;save.casesOpened=(save.casesOpened||0)+1;save.lastTick=Date.now();saveData(save);updateCity();$('#case-opening-subtitle').textContent='Контейнер відкрито. Ось що тобі дісталось:';$('#result-name').textContent=reward.name.toLocaleUpperCase('uk');$('#result-value').textContent=`+${money(reward.value)}`;$('#case-result').hidden=false;$('#case-close').disabled=false;caseCanClose=true;};
-    track.addEventListener('transitionend',finish,{once:true});caseTimer=setTimeout(finish,5100);
+    track.addEventListener('transitionend',finish,{once:true});caseTimer=setTimeout(finish,spinMs+500);
   }
   $$('[data-open-case]').forEach(button=>button.addEventListener('click',()=>startCase(button.dataset.openCase)));
   function hideCaseOverlay(){clearTimeout(caseTimer);$('#case-overlay').hidden=true;$('#roulette-track').style.transition='none';$('#roulette-track').style.transform='translateX(0)';caseCanClose=false;}
