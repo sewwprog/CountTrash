@@ -16,6 +16,7 @@
   if (!Array.isArray(saves)) saves = [];
   let profile = safeRead(PROFILE_KEY, { name: 'Гравець' });
   if (!profile || typeof profile !== 'object') profile = { name: 'Гравець' };
+  let pendingAvatar = typeof profile.avatar === 'string' ? profile.avatar : '';
   let settings = safeRead(SETTINGS_KEY, { sound: true, motion: true, hints: true });
   if (!settings || typeof settings !== 'object') settings = { sound: true, motion: true, hints: true };
   let currentSaveId = null;
@@ -45,8 +46,43 @@
   function getName() {
     return typeof profile.name === 'string' && profile.name.trim() ? profile.name.trim() : 'Гравець';
   }
+  const avatarFallback = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2z"/></svg>';
+  function renderAvatar(element, imageData) {
+    element.replaceChildren();
+    if (typeof imageData === 'string' && /^data:image\/(jpeg|png|webp);base64,/i.test(imageData)) {
+      const image = document.createElement('img');
+      image.src = imageData;
+      image.alt = '';
+      element.append(image);
+    } else {
+      element.innerHTML = avatarFallback;
+    }
+  }
   function updateProfile() {
     $('#top-name').textContent = getName();
+    renderAvatar($('#top-avatar'), profile.avatar || '');
+  }
+  function fileToAvatar(file) {
+    return new Promise((resolve, reject) => {
+      const draw = (source, width, height, release = () => {}) => {
+        const canvas = document.createElement('canvas');
+        canvas.width = canvas.height = 320;
+        const side = Math.min(width, height);
+        const context = canvas.getContext('2d');
+        context.drawImage(source, (width - side) / 2, (height - side) / 2, side, side, 0, 0, 320, 320);
+        release();
+        resolve(canvas.toDataURL('image/jpeg', 0.82));
+      };
+      if ('createImageBitmap' in window) {
+        createImageBitmap(file).then(bitmap => draw(bitmap, bitmap.width, bitmap.height, () => bitmap.close())).catch(reject);
+        return;
+      }
+      const url = URL.createObjectURL(file);
+      const image = new Image();
+      image.onload = () => draw(image, image.naturalWidth, image.naturalHeight, () => URL.revokeObjectURL(url));
+      image.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Не вдалося відкрити зображення')); };
+      image.src = url;
+    });
   }
   function updateSaves() {
     $('#save-count').textContent = saves.length;
@@ -101,6 +137,9 @@
     }
     if (action === 'profile') {
       $('#player-name').value = getName();
+      pendingAvatar = profile.avatar || '';
+      $('#avatar-input').value = '';
+      renderAvatar($('#avatar-preview'), pendingAvatar);
       openDialog('profile-modal');
     }
     if (action === 'settings') openDialog('settings-modal');
@@ -146,12 +185,31 @@
     option.classList.add('selected');
     $('input', option).checked = true;
   }));
+  $('#avatar-pick').addEventListener('click', () => $('#avatar-input').click());
+  $('#avatar-input').addEventListener('change', async event => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) { showToast('Обери файл зображення.'); return; }
+    if (file.size > 20 * 1024 * 1024) { showToast('Фото завелике. Максимум — 20 МБ.'); return; }
+    try {
+      pendingAvatar = await fileToAvatar(file);
+      renderAvatar($('#avatar-preview'), pendingAvatar);
+    } catch {
+      showToast('Не вдалося завантажити це фото. Спробуй інше.');
+    }
+  });
+  $('#avatar-remove').addEventListener('click', () => {
+    pendingAvatar = '';
+    $('#avatar-input').value = '';
+    renderAvatar($('#avatar-preview'), '');
+  });
   $('#profile-form').addEventListener('submit', event => {
     event.preventDefault();
     const name = $('#player-name').value.trim();
     if (!name) return;
-    profile = { name };
-    try { localStorage.setItem(PROFILE_KEY, JSON.stringify(profile)); } catch { /* Keep the change for this session. */ }
+    profile = { name, avatar: pendingAvatar };
+    try { localStorage.setItem(PROFILE_KEY, JSON.stringify(profile)); }
+    catch { showToast('Фото завелике для збереження. Обери менше зображення.'); return; }
     updateProfile();
     closeDialogs();
     showToast('Профіль оновлено.');
