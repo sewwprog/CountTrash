@@ -46,7 +46,7 @@
   function getName() {
     return typeof profile.name === 'string' && profile.name.trim() ? profile.name.trim() : 'Гравець';
   }
-  const avatarFallback = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2z"/></svg>';
+  const avatarFallback = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2z"/></svg>';
   function renderAvatar(element, imageData) {
     element.replaceChildren();
     if (typeof imageData === 'string' && /^data:image\/(jpeg|png|webp);base64,/i.test(imageData)) {

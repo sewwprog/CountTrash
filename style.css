@@ -40,3 +40,17 @@
   .avatar-preview{width:48px;height:48px}
 }
 @media(max-width:720px){.section-kicker{display:none}.section-heading{margin-bottom:9px}.page-footer span:last-child{display:none}}
+
+/* Explicit sizing keeps profile controls stable across mobile browsers. */
+#profile-modal .profile-avatar-editor{width:100%;min-width:0}
+#profile-modal .avatar-pick{width:100%;min-width:0;min-height:76px;height:76px;max-height:76px;flex:1 1 auto;appearance:none;-webkit-appearance:none;border-radius:3px;color:#e9e5dc}
+#profile-modal .avatar-preview{width:54px;height:54px;min-width:54px;min-height:54px;max-width:54px;max-height:54px;flex:0 0 54px}
+#profile-modal .avatar-preview svg{display:block;width:24px;height:24px;max-width:24px;max-height:24px;fill:none;stroke:currentColor}
+#profile-modal .camera-icon{width:28px;height:28px;min-width:28px;flex:0 0 28px}
+#profile-modal .camera-icon svg{display:block;width:16px;height:16px;max-width:16px;max-height:16px;fill:none;stroke:currentColor}
+#profile-modal .avatar-pick-copy{min-width:0}
+#profile-modal .avatar-pick-copy b{color:#e8e4db}
+#profile-modal .avatar-pick-copy small{color:#9299a1;white-space:normal}
+#profile-modal .avatar-remove{flex:0 0 auto;white-space:nowrap}
+#profile-modal .avatar-preview img{display:block;width:100%;height:100%;max-width:54px;max-height:54px;object-fit:cover}
+@media(max-width:390px){#profile-modal .avatar-preview{width:48px;height:48px;min-width:48px;min-height:48px;max-width:48px;max-height:48px;flex-basis:48px}#profile-modal .avatar-preview img{max-width:48px;max-height:48px}}
