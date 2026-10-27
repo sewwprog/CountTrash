@@ -38,20 +38,20 @@
   ];
   const REWARDS = {
     cars:[
-      {name:'Hyundai Elantra',value:250,rarity:'common',weight:37},
-      {name:'Volkswagen Golf GTI',value:450,rarity:'common',weight:30},
-      {name:'BMW M3',value:1700,rarity:'rare',weight:18},
-      {name:'Porsche 911 GT3 RS',value:6500,rarity:'epic',weight:9},
-      {name:'Ferrari SF90 Stradale',value:18000,rarity:'epic',weight:4},
-      {name:'Bugatti Chiron',value:45000,rarity:'legendary',weight:2}
+      {name:'Hyundai Elantra',value:250,rarity:'common',weight:37,image:'public/loot-hyundai-elantra.jpg'},
+      {name:'Volkswagen Golf GTI',value:450,rarity:'common',weight:30,image:'public/loot-vw-golf.jpg'},
+      {name:'BMW M3',value:1700,rarity:'rare',weight:18,image:'public/loot-bmw-m3.jpg'},
+      {name:'Porsche 911 GT3 RS',value:6500,rarity:'epic',weight:9,image:'public/loot-porsche-911.jpg'},
+      {name:'Ferrari SF90 Stradale',value:18000,rarity:'epic',weight:4,image:'public/loot-ferrari-sf90.jpg'},
+      {name:'Bugatti Chiron',value:45000,rarity:'legendary',weight:2,image:'public/loot-bugatti-chiron.jpg'}
     ],
     arms:[
-      {name:'Glock 17',value:250,rarity:'common',weight:37},
-      {name:'MP5',value:500,rarity:'common',weight:31},
-      {name:'AK-47',value:1700,rarity:'rare',weight:18},
-      {name:'M4A1',value:7000,rarity:'epic',weight:9},
-      {name:'Desert Eagle',value:15000,rarity:'epic',weight:4},
-      {name:'AWP',value:40000,rarity:'legendary',weight:1}
+      {name:'Glock 17',value:250,rarity:'common',weight:37,image:'public/loot-glock-17.jpg'},
+      {name:'MP5',value:500,rarity:'common',weight:31,image:'public/loot-mp5.jpg'},
+      {name:'AK-47',value:1700,rarity:'rare',weight:18,image:'public/loot-ak47.jpg'},
+      {name:'M4A1',value:7000,rarity:'epic',weight:9,image:'public/loot-m4a1.jpg'},
+      {name:'Desert Eagle',value:15000,rarity:'epic',weight:4,image:'public/loot-desert-eagle.svg'},
+      {name:'AWP',value:40000,rarity:'legendary',weight:1,image:'public/loot-awp.svg'}
     ]
   };
 
@@ -264,7 +264,7 @@
     const reward=weightedReward(type),src=type==='cars'?'public/container-cars.jpg':'public/container-arms.jpg';
     const track=$('#roulette-track'),winnerIndex=15;
     const cards=Array.from({length:19},(_,i)=>i===winnerIndex?reward:weightedReward(type));
-    track.innerHTML=cards.map((item,i)=>`<div class="roulette-item ${item.rarity}" data-index="${i}"><img src="${src}" alt=""/><small>${item.rarity==='legendary'?'★ ЛЕГЕНДАРНЕ':item.rarity==='epic'?'◆ ЕПІЧНЕ':item.rarity==='rare'?'● РІДКІСНЕ':'ЗВИЧАЙНЕ'}</small><span>${escapeHtml(item.name)}</span></div>`).join('');
+    track.innerHTML=cards.map((item,i)=>`<div class="roulette-item ${item.rarity}" data-index="${i}"><img src="${item.image||src}" alt="${escapeHtml(item.name)}" loading="lazy"/><small>${item.rarity==='legendary'?'★ ЛЕГЕНДАРНЕ':item.rarity==='epic'?'◆ ЕПІЧНЕ':item.rarity==='rare'?'● РІДКІСНЕ':'ЗВИЧАЙНЕ'}</small><span>${escapeHtml(item.name)}</span></div>`).join('');
     $('#case-opening-title').textContent=type==='cars'?'АВТОМОБІЛЬНИЙ КОНТЕЙНЕР':'КОНТЕЙНЕР З АРСЕНАЛОМ';
     $('#case-opening-subtitle').textContent='Вантаж на шляху…';$('#case-result').hidden=true;$('#case-close').disabled=true;caseCanClose=false;
     const overlay=$('#case-overlay');overlay.hidden=false;track.style.transition='none';track.style.transform='translateX(0px)';
