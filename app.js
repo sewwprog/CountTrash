@@ -36,19 +36,19 @@
     {id:'warehouse',name:'Логістичний склад',kind:'business',cost:49000,income:980,icon:icon.warehouse,desc:'Вантажі ніколи не сплять'},
     {id:'home',name:'Житловий будинок',kind:'housing',cost:18000,income:105,population:120,icon:icon.home,desc:'+120 мешканців · стабільна оренда'}
   ];
-  const CASE_PRICES = {cars:1250,arms:1250};
+  const CASE_PRICES = {cars:35000,arms:2200};
   const REWARDS = {
     cars:[
-      {name:'ВАЗ / Lada 2107 — розвалюха',value:150,marketPrice:900,rarity:'common',weight:32,image:'public/loot-lada-2107-wreck.jpg'},
-      {name:'Daewoo Lanos — розвалюха',value:250,marketPrice:1500,rarity:'common',weight:28,image:'public/loot-daewoo-lanos-wreck.jpg'},
-      {name:'Hyundai Elantra',value:750,marketPrice:22825,rarity:'common',weight:15,image:'public/loot-hyundai-elantra.jpg'},
-      {name:'Volkswagen Golf GTI',value:1000,marketPrice:35865,rarity:'common',weight:10,image:'public/loot-vw-golf.jpg'},
-      {name:'Mercedes-AMG C 63',value:2000,marketPrice:89350,rarity:'rare',weight:6,image:'public/loot-mercedes-amg-c63.jpg'},
-      {name:'Audi RS6 Avant',value:3000,marketPrice:130700,rarity:'epic',weight:3.5,image:'public/loot-audi-rs6.jpg'},
-      {name:'BMW M3',value:1800,marketPrice:79300,rarity:'rare',weight:3,image:'public/loot-bmw-m3.jpg'},
-      {name:'Porsche 911 GT3 RS',value:6000,marketPrice:241300,rarity:'epic',weight:1.5,image:'public/loot-porsche-911.jpg'},
-      {name:'Ferrari SF90 Stradale',value:12000,marketPrice:528764,rarity:'epic',weight:.8,image:'public/loot-ferrari-sf90.jpg'},
-      {name:'Bugatti Chiron',value:30000,marketPrice:3300000,rarity:'legendary',weight:.2,image:'public/loot-bugatti-chiron.jpg'}
+      {name:'ВАЗ / Lada 2107 — розвалюха',value:900,marketPrice:900,rarity:'common',weight:32,image:'public/loot-lada-2107-wreck.jpg'},
+      {name:'Daewoo Lanos — розвалюха',value:1500,marketPrice:1500,rarity:'common',weight:28,image:'public/loot-daewoo-lanos-wreck.jpg'},
+      {name:'Hyundai Elantra',value:22825,marketPrice:22825,rarity:'common',weight:15,image:'public/loot-hyundai-elantra.jpg'},
+      {name:'Volkswagen Golf GTI',value:35865,marketPrice:35865,rarity:'common',weight:10,image:'public/loot-vw-golf.jpg'},
+      {name:'Mercedes-AMG C 63',value:89350,marketPrice:89350,rarity:'rare',weight:6,image:'public/loot-mercedes-amg-c63.jpg'},
+      {name:'Audi RS6 Avant',value:130700,marketPrice:130700,rarity:'epic',weight:3.5,image:'public/loot-audi-rs6.jpg'},
+      {name:'BMW M3',value:79300,marketPrice:79300,rarity:'rare',weight:3,image:'public/loot-bmw-m3.jpg'},
+      {name:'Porsche 911 GT3 RS',value:241300,marketPrice:241300,rarity:'epic',weight:1.5,image:'public/loot-porsche-911.jpg'},
+      {name:'Ferrari SF90 Stradale',value:528764,marketPrice:528764,rarity:'epic',weight:.8,image:'public/loot-ferrari-sf90.jpg'},
+      {name:'Bugatti Chiron',value:3300000,marketPrice:3300000,rarity:'legendary',weight:.2,image:'public/loot-bugatti-chiron.jpg'}
     ],
     arms:[
       {name:'Glock 17',value:250,rarity:'common',weight:37,image:'public/loot-glock-17.jpg'},
@@ -298,7 +298,7 @@
   function weightedReward(type){const items=REWARDS[type];let roll=Math.random()*items.reduce((s,x)=>s+x.weight,0);for(const item of items){roll-=item.weight;if(roll<=0)return item;}return items[0];}
   function renderCarDropItems(){
     const list=$('#car-drop-items');if(!list)return;
-    list.innerHTML=REWARDS.cars.map(item=>`<div class="drop-item"><img src="${item.image}" alt="${escapeHtml(item.name)}" loading="lazy"/><span>${escapeHtml(item.name)}<b>${Number(item.weight).toLocaleString('uk-UA',{maximumFractionDigits:1})}%</b></span><small>Ціна ${money(item.marketPrice)} · виплата ${money(item.value)}</small></div>`).join('');
+    list.innerHTML=REWARDS.cars.map(item=>`<div class="drop-item"><img src="${item.image}" alt="${escapeHtml(item.name)}" loading="lazy"/><span>${escapeHtml(item.name)}<b>${Number(item.weight).toLocaleString('uk-UA',{maximumFractionDigits:1})}%</b></span><small>Ринкова ціна ${money(item.marketPrice)}</small></div>`).join('');
   }
   renderCarDropItems();
   async function startCase(type){
@@ -327,7 +327,7 @@
       track.style.transition=`transform ${spinMs}ms cubic-bezier(.10,.72,.08,1)`;track.style.transform=`translateX(${offset}px)`;
     }));
     let settled=false;
-    const finish=()=>{if(settled)return;settled=true;clearTimeout(caseTimer);accrueIncome(save);save.cash+=reward.value;save.pendingCase=null;save.casesOpened=(save.casesOpened||0)+1;saveData(save);updateCity();$('#case-opening-subtitle').textContent='Контейнер відкрито. Ось що тобі дісталось:';$('#result-name').textContent=reward.name.toLocaleUpperCase('uk');const marketPrice=$('#result-market-price');marketPrice.hidden=!reward.marketPrice;marketPrice.textContent=reward.marketPrice?`Ринкова ціна: ${money(reward.marketPrice)}`:'';$('#result-payout-label').textContent=type==='cars'?'ВИПЛАТА ЗА АВТО (ЗА СТАНОМ)':'ГРОШОВА ВИПЛАТА';$('#result-value').textContent=`+${money(reward.value)}`;$('#case-result').hidden=false;$('#case-close').disabled=false;caseCanClose=true;};
+    const finish=()=>{if(settled)return;settled=true;clearTimeout(caseTimer);accrueIncome(save);save.cash+=reward.value;save.pendingCase=null;save.casesOpened=(save.casesOpened||0)+1;saveData(save);updateCity();$('#case-opening-subtitle').textContent='Контейнер відкрито. Ось що тобі дісталось:';$('#result-name').textContent=reward.name.toLocaleUpperCase('uk');const marketPrice=$('#result-market-price');marketPrice.hidden=!reward.marketPrice;marketPrice.textContent=reward.marketPrice?`Ринкова ціна: ${money(reward.marketPrice)}`:'';$('#result-payout-label').textContent=type==='cars'?'ЗАРАХОВАНО ЗА РИНКОВОЮ ЦІНОЮ':'ГРОШОВА ВИПЛАТА';$('#result-value').textContent=`+${money(reward.value)}`;$('#case-result').hidden=false;$('#case-close').disabled=false;caseCanClose=true;};
     track.addEventListener('transitionend',finish,{once:true});caseTimer=setTimeout(finish,spinMs+500);
   }
   $$('[data-open-case]').forEach(button=>button.addEventListener('click',()=>startCase(button.dataset.openCase)));
