@@ -387,6 +387,12 @@
     }else{heading.textContent='ЩО БУДУЄМО?';list.hidden=false;panel.hidden=true;panel.innerHTML='';}
     $('#build-filters').hidden=!!(selectedBuildingIndex!==null&&save.buildings[selectedBuildingIndex])||!!pendingBuildId;
   }
+  function selectBuilding(index) {
+    const save=getCurrent();
+    if(!save||!Number.isInteger(index)||!save.buildings[index])return;
+    selectedBuildingIndex=index;pendingBuildId=null;movingBuildingIndex=null;confirmingRemoval=false;buildPanelOpen=true;
+    renderCity();
+  }
   function updateCity() {
     const save=getCurrent(); if(!save)return; normalizeSave(save);
     $('#game-title').textContent=cityName(save).toLocaleUpperCase('uk');
@@ -394,12 +400,17 @@
     $('#city-cash').textContent=money(save.cash);$('#container-cash').textContent=money(save.cash);
     $('#city-income').textContent=money(incomePerMinute(save));$('#city-population').textContent=Number(save.population).toLocaleString('uk-UA');
     $('#building-count').textContent=`${save.buildings.length} / ${MAX_BUILDINGS}`;$('#build-panel-count').textContent=`${save.buildings.length}/${MAX_BUILDINGS}`;$('#cases-count').textContent=Number(save.casesOpened)||0;
-    $('#map-lots').innerHTML=save.buildings.map((building,index)=>{const item=itemById(building.type),level=building.level||1;return `<button class="city-lot occupied ${selectedBuildingIndex===index?'selected':''}" data-building-index="${index}" aria-pressed="${selectedBuildingIndex===index}" aria-label="${escapeHtml(item?.name||building.name||'Будівля')}, рівень ${level}. Торкніться для керування" style="--x:${building.x}%;--y:${building.y}%"><span class="lot-icon">${item?.icon||icon.warehouse}</span><b>${escapeHtml(item?.name||building.name||'Будівля')}</b><small>РІВ. ${level} · +${money(buildingIncome(building))}/ХВ</small></button>`;}).join('');
+    const mapLots=$('#map-lots');
+    mapLots.innerHTML=save.buildings.map((building,index)=>{const item=itemById(building.type),level=building.level||1;return `<button type="button" class="city-lot occupied ${selectedBuildingIndex===index?'selected':''}" data-building-index="${index}" aria-pressed="${selectedBuildingIndex===index}" aria-label="${escapeHtml(item?.name||building.name||'Будівля')}, рівень ${level}. Торкніться для керування" style="--x:${building.x}%;--y:${building.y}%"><span class="lot-icon">${item?.icon||icon.warehouse}</span><b>${escapeHtml(item?.name||building.name||'Будівля')}</b><small>РІВ. ${level} · +${money(buildingIncome(building))}/ХВ</small></button>`;}).join('');
+    $$('[data-building-index]',mapLots).forEach(marker=>marker.addEventListener('click',event=>{event.preventDefault();event.stopPropagation();selectBuilding(Number(marker.dataset.buildingIndex));}));
     const buildList=$('#build-list');
     buildList.innerHTML=CATALOG.map(item=>`<article class="build-card ${pendingBuildId===item.id?'selected':''}" title="${escapeHtml(item.desc)}" ${buildFilter!=='all'&&item.kind!==buildFilter?'hidden':''}><span class="build-icon">${item.icon}</span><span class="build-copy"><b>${escapeHtml(item.name)}</b><small>+${money(item.income)}/хв</small></span><button class="build-buy" data-select-build="${item.id}" ${save.cash<item.cost||save.buildings.length>=MAX_BUILDINGS?'disabled':''}>${money(item.cost)}</button></article>`).join('');
     $$('[data-select-build]',buildList).forEach(btn=>btn.addEventListener('click',()=>selectBuild(btn.dataset.selectBuild)));
     $$('.build-card',buildList).forEach(card=>card.addEventListener('click',event=>{if(event.target.closest('[data-select-build]'))return;const button=$('[data-select-build]',card);if(button&&!button.disabled)selectBuild(button.dataset.selectBuild);}));
     renderSelectionPanel(save);updateMapHint();renderCaseBalance();updateMapTransform();
+  }
+  function renderCity() {
+    updateCity();
   }
   function mapLotSize(surfaceWidth) {
     const mobile=window.matchMedia?window.matchMedia('(max-width: 680px)').matches:window.innerWidth<=680;
@@ -518,7 +529,7 @@
   mapSurface.addEventListener('click',event=>{
     if(Date.now()<suppressMapClickUntil||event.target.closest('.map-controls,.build-toggle,.map-placement-cancel'))return;
     const marker=event.target.closest('[data-building-index]');
-    if(marker){selectedBuildingIndex=Number(marker.dataset.buildingIndex);pendingBuildId=null;movingBuildingIndex=null;confirmingRemoval=false;buildPanelOpen=true;renderCity();return;}
+    if(marker){selectBuilding(Number(marker.dataset.buildingIndex));return;}
     if(pendingBuildId||movingBuildingIndex!==null){placeOrMove(positionFromEvent(event));return;}
     if(selectedBuildingIndex!==null){selectedBuildingIndex=null;movingBuildingIndex=null;confirmingRemoval=false;buildPanelOpen=false;renderCity();return;}
     if(buildPanelOpen){buildPanelOpen=false;renderCity();}
