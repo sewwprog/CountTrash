@@ -402,7 +402,11 @@
     $('#building-count').textContent=`${save.buildings.length} / ${MAX_BUILDINGS}`;$('#build-panel-count').textContent=`${save.buildings.length}/${MAX_BUILDINGS}`;$('#cases-count').textContent=Number(save.casesOpened)||0;
     const mapLots=$('#map-lots');
     mapLots.innerHTML=save.buildings.map((building,index)=>{const item=itemById(building.type),level=building.level||1;return `<button type="button" class="city-lot occupied ${selectedBuildingIndex===index?'selected':''}" data-building-index="${index}" aria-pressed="${selectedBuildingIndex===index}" aria-label="${escapeHtml(item?.name||building.name||'Будівля')}, рівень ${level}. Торкніться для керування" style="--x:${building.x}%;--y:${building.y}%"><span class="lot-icon">${item?.icon||icon.warehouse}</span><b>${escapeHtml(item?.name||building.name||'Будівля')}</b><small>РІВ. ${level} · +${money(buildingIncome(building))}/ХВ</small></button>`;}).join('');
-    $$('[data-building-index]',mapLots).forEach(marker=>marker.addEventListener('click',event=>{event.preventDefault();event.stopPropagation();selectBuilding(Number(marker.dataset.buildingIndex));}));
+    $$('[data-building-index]',mapLots).forEach(marker=>{
+      const openControls=event=>{event.preventDefault();event.stopPropagation();selectBuilding(Number(marker.dataset.buildingIndex));};
+      marker.addEventListener('pointerdown',event=>{if(event.pointerType==='mouse'&&event.button!==0)return;openControls(event);});
+      marker.addEventListener('click',openControls);
+    });
     const buildList=$('#build-list');
     buildList.innerHTML=CATALOG.map(item=>`<article class="build-card ${pendingBuildId===item.id?'selected':''}" title="${escapeHtml(item.desc)}" ${buildFilter!=='all'&&item.kind!==buildFilter?'hidden':''}><span class="build-icon">${item.icon}</span><span class="build-copy"><b>${escapeHtml(item.name)}</b><small>+${money(item.income)}/хв</small></span><button class="build-buy" data-select-build="${item.id}" ${save.cash<item.cost||save.buildings.length>=MAX_BUILDINGS?'disabled':''}>${money(item.cost)}</button></article>`).join('');
     $$('[data-select-build]',buildList).forEach(btn=>btn.addEventListener('click',()=>selectBuild(btn.dataset.selectBuild)));
