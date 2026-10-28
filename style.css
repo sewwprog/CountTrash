@@ -138,3 +138,32 @@
   .daily-bonus-step small{font-size:5px}
   .daily-bonus-step b{font-size:6px}
 }
+
+/* Navigable city map: pointer/touch panning with persistent zoom controls. */
+.map-surface{background:#11171b;touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none}
+.map-surface:before{display:none}
+.map-world{position:absolute;inset:0;z-index:1;overflow:hidden;transform-origin:50% 50%;background:linear-gradient(180deg,#0a0d1088,#090c1099),url('public/city-map.jpg') center/cover no-repeat;will-change:transform}
+.map-surface.is-panning{cursor:grabbing}
+.map-controls{position:absolute;z-index:5;top:10px;right:10px;display:flex;align-items:center;gap:4px;padding:4px;border:1px solid #44423b;background:#101317eF;box-shadow:0 4px 16px #0008;touch-action:manipulation}
+.map-controls button{display:grid;min-width:36px;height:34px;place-items:center;padding:0 8px;border:1px solid #3b4146;background:#1a1f24;color:#e4b66d;font-size:18px;font-weight:800;line-height:1;cursor:pointer;touch-action:manipulation}
+.map-controls button:hover{border-color:#bd9252;background:#272219}
+.map-controls #map-zoom-reset{min-width:52px;color:#d5d1c7;font-size:8px;letter-spacing:.4px}
+.map-controls button:disabled{opacity:.45;cursor:default}
+.selection-panel-head{display:flex;align-items:flex-start;gap:8px;padding-right:0}
+.selection-panel-head .selected-building{flex:1;min-width:0}
+.selection-panel .selection-close{display:grid;width:34px;height:34px;flex:none;place-items:center;border:1px solid #655337;background:#231d14;color:#edbd70;font-size:20px;line-height:1;cursor:pointer;touch-action:manipulation}
+.selection-panel .selection-close:hover{border-color:#e0ad5c;background:#312416}
+.demolish-confirm{margin-top:9px;padding:9px;border:1px solid #65483a;background:#211714}
+.demolish-confirm p{margin:0 0 8px;color:#d1b6a8;font-size:8px;line-height:1.5}
+.demolish-confirm p b{color:#e9bd71}
+.demolish-confirm>div{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.demolish-confirm button{min-height:36px;padding:5px;border:1px solid #42474c;background:#1b2024;color:#d1d4d3;font-size:7px;font-weight:900;letter-spacing:.3px;cursor:pointer;touch-action:manipulation}
+.demolish-confirm [data-confirm-remove]{border-color:#79483a;background:#352019;color:#f0a28b}
+.demolish-confirm button:hover{filter:brightness(1.2)}
+@media(max-width:680px){
+  .map-controls{top:8px;right:8px;gap:4px;padding:4px}
+  .map-controls button{min-width:40px;height:40px;font-size:20px}
+  .map-controls #map-zoom-reset{min-width:56px;font-size:9px}
+  .selection-panel .selection-close{width:40px;height:40px;font-size:23px}
+  .demolish-confirm button{min-height:40px;font-size:8px}
+}
