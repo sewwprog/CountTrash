@@ -36,16 +36,19 @@
     {id:'warehouse',name:'Логістичний склад',kind:'business',cost:49000,income:980,icon:icon.warehouse,desc:'Вантажі ніколи не сплять'},
     {id:'home',name:'Житловий будинок',kind:'housing',cost:18000,income:105,population:120,icon:icon.home,desc:'+120 мешканців · стабільна оренда'}
   ];
+  const CASE_PRICES = {cars:1250,arms:1250};
   const REWARDS = {
     cars:[
-      {name:'Hyundai Elantra',value:250,rarity:'common',weight:28,image:'public/loot-hyundai-elantra.jpg'},
-      {name:'Volkswagen Golf GTI',value:450,rarity:'common',weight:22,image:'public/loot-vw-golf.jpg'},
-      {name:'Mercedes-AMG C 63',value:850,rarity:'common',weight:15,image:'public/loot-mercedes-amg-c63.jpg'},
-      {name:'Audi RS6 Avant',value:1100,rarity:'common',weight:13,image:'public/loot-audi-rs6.jpg'},
-      {name:'BMW M3',value:1700,rarity:'rare',weight:12,image:'public/loot-bmw-m3.jpg'},
-      {name:'Porsche 911 GT3 RS',value:6500,rarity:'epic',weight:6,image:'public/loot-porsche-911.jpg'},
-      {name:'Ferrari SF90 Stradale',value:18000,rarity:'epic',weight:3,image:'public/loot-ferrari-sf90.jpg'},
-      {name:'Bugatti Chiron',value:45000,rarity:'legendary',weight:1,image:'public/loot-bugatti-chiron.jpg'}
+      {name:'ВАЗ / Lada 2107 — розвалюха',value:150,marketPrice:900,rarity:'common',weight:32,image:'public/loot-lada-2107-wreck.jpg'},
+      {name:'Daewoo Lanos — розвалюха',value:250,marketPrice:1500,rarity:'common',weight:28,image:'public/loot-daewoo-lanos-wreck.jpg'},
+      {name:'Hyundai Elantra',value:750,marketPrice:22825,rarity:'common',weight:15,image:'public/loot-hyundai-elantra.jpg'},
+      {name:'Volkswagen Golf GTI',value:1000,marketPrice:35865,rarity:'common',weight:10,image:'public/loot-vw-golf.jpg'},
+      {name:'Mercedes-AMG C 63',value:2000,marketPrice:89350,rarity:'rare',weight:6,image:'public/loot-mercedes-amg-c63.jpg'},
+      {name:'Audi RS6 Avant',value:3000,marketPrice:130700,rarity:'epic',weight:3.5,image:'public/loot-audi-rs6.jpg'},
+      {name:'BMW M3',value:1800,marketPrice:79300,rarity:'rare',weight:3,image:'public/loot-bmw-m3.jpg'},
+      {name:'Porsche 911 GT3 RS',value:6000,marketPrice:241300,rarity:'epic',weight:1.5,image:'public/loot-porsche-911.jpg'},
+      {name:'Ferrari SF90 Stradale',value:12000,marketPrice:528764,rarity:'epic',weight:.8,image:'public/loot-ferrari-sf90.jpg'},
+      {name:'Bugatti Chiron',value:30000,marketPrice:3300000,rarity:'legendary',weight:.2,image:'public/loot-bugatti-chiron.jpg'}
     ],
     arms:[
       {name:'Glock 17',value:250,rarity:'common',weight:37,image:'public/loot-glock-17.jpg'},
@@ -244,7 +247,7 @@
   function recoverPendingCase(save) {
     if(!save.pendingCase)return null;
     const value=Number(save.pendingCase.reward?.value),valid=Number.isFinite(value)&&value>=0;
-    if(valid){save.cash+=value;save.casesOpened=(save.casesOpened||0)+1;}else save.cash+=1000;
+    if(valid){save.cash+=value;save.casesOpened=(save.casesOpened||0)+1;}else save.cash+=Number(save.pendingCase.price)||1000;
     save.pendingCase=null;
     return valid;
   }
@@ -293,15 +296,21 @@
   $('#game-modal').addEventListener('cancel',event=>{event.preventDefault();if(!$('#case-overlay').hidden){if(caseCanClose)hideCaseOverlay();return;}closeGame();});
   $('#continue-button').addEventListener('click',()=>{if(saves[0])launchGame(saves[0].id);});
   function weightedReward(type){const items=REWARDS[type];let roll=Math.random()*items.reduce((s,x)=>s+x.weight,0);for(const item of items){roll-=item.weight;if(roll<=0)return item;}return items[0];}
+  function renderCarDropItems(){
+    const list=$('#car-drop-items');if(!list)return;
+    list.innerHTML=REWARDS.cars.map(item=>`<div class="drop-item"><img src="${item.image}" alt="${escapeHtml(item.name)}" loading="lazy"/><span>${escapeHtml(item.name)}<b>${Number(item.weight).toLocaleString('uk-UA',{maximumFractionDigits:1})}%</b></span><small>Ціна ${money(item.marketPrice)} · виплата ${money(item.value)}</small></div>`).join('');
+  }
+  renderCarDropItems();
   async function startCase(type){
+
     if (!$('#case-overlay').hidden) return;
     const save=getCurrent();if(!save)return;
     clearTimeout(caseTimer);
-    const price=1000;
+    const price=CASE_PRICES[type]||1000;
     accrueIncome(save);
     if(save.cash<price){showToast('Не вистачає коштів на цей контейнер.');return;}
     const reward=weightedReward(type),src=type==='cars'?'public/container-cars.jpg':'public/container-arms.jpg';
-    save.cash-=price;save.pendingCase={type,reward};saveData(save);updateCity();
+    save.cash-=price;save.pendingCase={type,price,reward};saveData(save);updateCity();
     const track=$('#roulette-track'),winnerIndex=23;
     const spinMs=document.body.classList.contains('reduce-motion')?250:8800;
     const cards=Array.from({length:29},(_,i)=>i===winnerIndex?reward:weightedReward(type));
@@ -318,7 +327,7 @@
       track.style.transition=`transform ${spinMs}ms cubic-bezier(.10,.72,.08,1)`;track.style.transform=`translateX(${offset}px)`;
     }));
     let settled=false;
-    const finish=()=>{if(settled)return;settled=true;clearTimeout(caseTimer);accrueIncome(save);save.cash+=reward.value;save.pendingCase=null;save.casesOpened=(save.casesOpened||0)+1;saveData(save);updateCity();$('#case-opening-subtitle').textContent='Контейнер відкрито. Ось що тобі дісталось:';$('#result-name').textContent=reward.name.toLocaleUpperCase('uk');$('#result-value').textContent=`+${money(reward.value)}`;$('#case-result').hidden=false;$('#case-close').disabled=false;caseCanClose=true;};
+    const finish=()=>{if(settled)return;settled=true;clearTimeout(caseTimer);accrueIncome(save);save.cash+=reward.value;save.pendingCase=null;save.casesOpened=(save.casesOpened||0)+1;saveData(save);updateCity();$('#case-opening-subtitle').textContent='Контейнер відкрито. Ось що тобі дісталось:';$('#result-name').textContent=reward.name.toLocaleUpperCase('uk');const marketPrice=$('#result-market-price');marketPrice.hidden=!reward.marketPrice;marketPrice.textContent=reward.marketPrice?`Ринкова ціна: ${money(reward.marketPrice)}`:'';$('#result-payout-label').textContent=type==='cars'?'ВИПЛАТА ЗА АВТО (ЗА СТАНОМ)':'ГРОШОВА ВИПЛАТА';$('#result-value').textContent=`+${money(reward.value)}`;$('#case-result').hidden=false;$('#case-close').disabled=false;caseCanClose=true;};
     track.addEventListener('transitionend',finish,{once:true});caseTimer=setTimeout(finish,spinMs+500);
   }
   $$('[data-open-case]').forEach(button=>button.addEventListener('click',()=>startCase(button.dataset.openCase)));
