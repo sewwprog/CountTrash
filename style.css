@@ -100,3 +100,41 @@
 .modal-toast.show{transform:translate(-50%,0)}
 @media(max-width:680px){.game-toast{right:10px;bottom:76px;left:10px;max-width:none;text-align:center}.modal-toast{right:12px;bottom:22px;left:12px;transform:translateY(8px)}.modal-toast.show{transform:translateY(0)}}
 @media(prefers-reduced-motion:reduce){.game-view.active,.city-lot{animation:none!important}}
+
+/* In-game profile and collectible daily bonus */
+.game-profile-trigger{display:flex;align-items:center;gap:7px;padding:3px 8px;border:1px solid #343a40;background:#15191f;color:#c6cbd0;font-size:8px;font-weight:800;cursor:pointer;white-space:nowrap}
+.game-profile-trigger:hover{border-color:#8d693a;color:var(--gold-light)}
+.game-profile-trigger .profile-avatar{width:29px;height:29px;flex:none}
+#profile-modal{width:min(530px,calc(100vw - 30px))}
+#profile-modal .modal-form{margin-top:18px}
+.profile-name-fields{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.profile-name-fields>div{display:flex;min-width:0;flex-direction:column}
+.profile-name-fields label{margin-bottom:7px;color:#b3b7ba;font-size:8px;font-weight:800;letter-spacing:1px}
+.profile-name-fields input{width:100%;min-width:0}
+.daily-bonus{margin-top:20px;padding:15px;border:1px solid #3b3327;background:linear-gradient(140deg,#191710,#11151a 65%)}
+.daily-bonus-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:8px}
+.daily-bonus-heading h3{margin:5px 0 0;font:800 22px/.95 var(--display);letter-spacing:.7px}
+.daily-bonus-heading h3 em{color:var(--gold);font-style:normal}
+.daily-bonus-day{padding:5px 7px;border:1px solid #5d472b;color:#e5b66d;font-size:7px;font-weight:900;letter-spacing:.7px;white-space:nowrap}
+.daily-bonus-days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px;margin-top:13px}
+.daily-bonus-step{display:flex;min-width:0;min-height:48px;flex-direction:column;align-items:center;justify-content:center;gap:4px;border:1px solid #30353b;background:#0d1014;color:#7d858d}
+.daily-bonus-step small{font-size:6px;font-weight:800;letter-spacing:.45px}
+.daily-bonus-step b{font-size:7px;color:#adb2b7;white-space:nowrap}
+.daily-bonus-step.current{border-color:#9a713d;background:#251d12;color:#f2bd70}
+.daily-bonus-step.current b,.daily-bonus-step.claimed b{color:#f0c276}
+.daily-bonus-step.claimed{border-color:#57492f;background:#1c1913}
+.daily-bonus-status{min-height:27px;margin:11px 0 8px;color:#9299a0;font-size:8px;line-height:1.5}
+.daily-bonus-claim{width:100%;min-width:0;height:40px}
+.daily-bonus-claim b{font-size:9px}
+.daily-bonus-claim:disabled{border-color:#42413b;background:#292a28;color:#96958e;cursor:default;transform:none}
+@media(max-width:680px){
+  .game-profile-trigger{gap:0;padding:2px;border-color:transparent;background:transparent}
+  .game-profile-trigger .profile-avatar{width:27px;height:27px}
+  .game-profile-trigger>span:last-child{display:none}
+  #profile-modal{padding:29px 18px 20px}
+  .daily-bonus{margin-top:16px;padding:12px}
+  .daily-bonus-days{gap:3px}
+  .daily-bonus-step{min-height:43px}
+  .daily-bonus-step small{font-size:5px}
+  .daily-bonus-step b{font-size:6px}
+}

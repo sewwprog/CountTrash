@@ -10,6 +10,13 @@
   if (!Array.isArray(saves)) saves = [];
   let profile = read(PROFILE_KEY, {name:'Гравець'});
   if (!profile || typeof profile !== 'object') profile = {name:'Гравець'};
+  const legacyNameParts=typeof profile.name==='string'?profile.name.trim().split(/\s+/).filter(Boolean):[];
+  profile.firstName=typeof profile.firstName==='string'?profile.firstName:(legacyNameParts[0]||'');
+  profile.lastName=typeof profile.lastName==='string'?profile.lastName:legacyNameParts.slice(1).join(' ');
+  profile.dailyClaimDay=typeof profile.dailyClaimDay==='string'?profile.dailyClaimDay:'';
+  profile.dailyStreak=Math.max(0,Math.min(7,Number(profile.dailyStreak)||0));
+  profile.dailyLastReward=Math.max(0,Number(profile.dailyLastReward)||0);
+  profile.pendingBonus=Math.max(0,Number(profile.pendingBonus)||0);
   let settings = read(SETTINGS_KEY, {sound:true,motion:true,hints:true});
   if (!settings || typeof settings !== 'object') settings = {sound:true,motion:true,hints:true};
   let pendingAvatar = typeof profile.avatar === 'string' ? profile.avatar : '';
@@ -21,6 +28,7 @@
   let selectedBuildingIndex = null;
   let movingBuildingIndex = null;
   const MAX_BUILDINGS = 24;
+  const DAILY_BONUSES = [500,750,1000,1250,1500,2000,3000];
 
   const icon = {
     shop:'<svg viewBox="0 0 24 24"><path d="M3 10h18l-2-6H5l-2 6Zm2 0v10h14V10M9 20v-6h6v6M3 10a3 3 0 0 0 6 0 3 3 0 0 0 6 0 3 3 0 0 0 6 0"/></svg>',
@@ -109,7 +117,18 @@
   }
   function closeDialogs(except = null) { Object.values(dialogs).forEach(d => { if (d !== except && d.open) d.close(); }); }
   function openDialog(name) { const d = dialogs[name]; if (!d) return; closeDialogs(d); if (!d.open) d.showModal(); }
-  function getName() { return typeof profile.name === 'string' && profile.name.trim() ? profile.name.trim() : 'Гравець'; }
+  function openProfileDialog(fromGame=false) {
+    const profileDialog=dialogs['profile-modal'],gameDialog=dialogs['game-modal'],keepGame=fromGame&&gameDialog.open;
+    Object.values(dialogs).forEach(dialog=>{if(dialog===profileDialog||(keepGame&&dialog===gameDialog))return;if(dialog.open)dialog.close();});
+    $('#player-first-name').value=profile.firstName||'';$('#player-last-name').value=profile.lastName||'';
+    pendingAvatar=profile.avatar||'';$('#avatar-input').value='';renderAvatar($('#avatar-preview'),pendingAvatar);
+    if(!profileDialog.open)profileDialog.showModal();
+    updateDailyBonusUI();
+  }
+  function getName() {
+    const fullName=[profile.firstName,profile.lastName].filter(value=>typeof value==='string'&&value.trim()).map(value=>value.trim()).join(' ');
+    return fullName||(typeof profile.name==='string'&&profile.name.trim()?profile.name.trim():'Гравець');
+  }
   const avatarFallback = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2z"/></svg>';
   function renderAvatar(element, imageData) {
     element.replaceChildren();
@@ -117,7 +136,45 @@
       const img = document.createElement('img'); img.src = imageData; img.alt = ''; element.append(img);
     } else element.innerHTML = avatarFallback;
   }
-  function updateProfile() { $('#top-name').textContent = getName(); renderAvatar($('#top-avatar'), profile.avatar || ''); }
+  function updateProfile() {
+    $('#top-name').textContent=getName();$('#game-profile-name').textContent=getName();
+    renderAvatar($('#top-avatar'),profile.avatar||'');renderAvatar($('#game-profile-avatar'),profile.avatar||'');
+  }
+  function persistProfile() { try{localStorage.setItem(PROFILE_KEY,JSON.stringify(profile));return true;}catch{return false;} }
+  function localDayKey(timestamp=Date.now()) {
+    const date=new Date(timestamp),month=String(date.getMonth()+1).padStart(2,'0'),day=String(date.getDate()).padStart(2,'0');
+    return `${date.getFullYear()}-${month}-${day}`;
+  }
+  function dailyBonusState() {
+    const today=localDayKey(),yesterday=new Date();yesterday.setDate(yesterday.getDate()-1);
+    const streak=Math.max(0,Math.min(7,Number(profile.dailyStreak)||0)),claimed=profile.dailyClaimDay===today;
+    const nextStreak=profile.dailyClaimDay===localDayKey(yesterday.getTime())?(streak>=7?1:streak+1):1;
+    const day=claimed?(streak||1):nextStreak;
+    return {today,claimed,day,amount:claimed?(profile.dailyLastReward||DAILY_BONUSES[day-1]):DAILY_BONUSES[day-1]};
+  }
+  function updateDailyBonusUI() {
+    const state=dailyBonusState(),completed=state.claimed?state.day:state.day-1;
+    $('#daily-bonus-day').textContent=`ДЕНЬ ${state.day} / 7`;
+    $('#daily-bonus-amount').textContent=`+ ${money(state.amount)}`;
+    $('#daily-bonus-days').innerHTML=DAILY_BONUSES.map((amount,index)=>`<span class="daily-bonus-step ${index<completed?'claimed ':''}${index===state.day-1?'current':''}"><small>ДЕНЬ ${index+1}</small><b>${money(amount)}</b></span>`).join('');
+    $('#daily-bonus-status').textContent=state.claimed?'Сьогоднішній бонус уже забрано. Повертайся завтра.':saves.length?'Забери бонус — він надійде в активне або останнє місто.':'Забери бонус зараз; він збережеться для твого першого міста.';
+    const button=$('#daily-bonus-claim');button.disabled=state.claimed;button.querySelector('span').textContent=state.claimed?'ЗАБРАНО СЬОГОДНІ':'ЗАБРАТИ БОНУС';
+  }
+  function claimDailyBonus() {
+    const state=dailyBonusState();if(state.claimed){showToast('Щоденний бонус уже забрано.');return;}
+    const amount=state.amount,target=getCurrent()||saves[0]||null;
+    const previous={day:profile.dailyClaimDay,streak:profile.dailyStreak,reward:profile.dailyLastReward,pending:profile.pendingBonus};
+    profile.dailyClaimDay=state.today;profile.dailyStreak=state.day;profile.dailyLastReward=amount;
+    if(target){normalizeSave(target);target.cash+=amount;saveData(target);if(target.id===currentSaveId)updateCity();}
+    else profile.pendingBonus=(Number(profile.pendingBonus)||0)+amount;
+    if(!persistProfile()){
+      profile.dailyClaimDay=previous.day;profile.dailyStreak=previous.streak;profile.dailyLastReward=previous.reward;profile.pendingBonus=previous.pending;
+      if(target){target.cash-=amount;saveData(target);if(target.id===currentSaveId)updateCity();}
+      updateDailyBonusUI();showToast('Не вдалося зберегти бонус. Перевір вільне місце у браузері.');return;
+    }
+    updateDailyBonusUI();
+    showToast(target?`Щоденний бонус ${money(amount)} додано до міста.`:`Бонус ${money(amount)} збережено для першого міста.`);
+  }
   function fileToAvatar(file) {
     return new Promise((resolve,reject) => {
       const draw = (source,w,h,release=()=>{}) => {
@@ -272,7 +329,7 @@
   $$('[data-action]').forEach(button=>button.addEventListener('click',()=>{
     const action=button.dataset.action;
     if(action==='new'){closeDialogs();$('#city-name').value='';openDialog('new-game-modal');setTimeout(()=>$('#city-name').focus(),80);}
-    if(action==='profile'){ $('#player-name').value=getName();pendingAvatar=profile.avatar||'';$('#avatar-input').value='';renderAvatar($('#avatar-preview'),pendingAvatar);openDialog('profile-modal'); }
+    if(action==='profile')openProfileDialog(false);
     if(action==='settings')openDialog('settings-modal');
   }));
   $$('[data-view]').forEach(button=>button.addEventListener('click',()=>{
@@ -289,10 +346,14 @@
   updateProfile(); updateSaves();
   $('#new-game-form').addEventListener('submit',event=>{
     event.preventDefault();const name=$('#city-name').value.trim();if(!name)return;
-    const save={id:globalThis.crypto?.randomUUID?.()||`${Date.now()}-${Math.random().toString(16).slice(2)}`,cityName:name,business:name,cash:70000,population:1200,buildings:[],casesOpened:0,lastTick:Date.now(),date:new Date().toLocaleDateString('uk-UA',{day:'2-digit',month:'short',year:'numeric'})};
+    const pendingBonus=Math.max(0,Number(profile.pendingBonus)||0);
+    const save={id:globalThis.crypto?.randomUUID?.()||`${Date.now()}-${Math.random().toString(16).slice(2)}`,cityName:name,business:name,cash:70000+pendingBonus,population:1200,buildings:[],casesOpened:0,lastTick:Date.now(),date:new Date().toLocaleDateString('uk-UA',{day:'2-digit',month:'short',year:'numeric'})};
+    if(pendingBonus){profile.pendingBonus=0;persistProfile();}
     saves.unshift(save);currentSaveId=save.id;pendingBuildId=null;selectedBuildingIndex=null;movingBuildingIndex=null;saveData(save);updateCity();switchGameTab('city');openDialog('game-modal');
+    if(pendingBonus)showToast(`Щоденний бонус ${money(pendingBonus)} додано до нового міста.`);
   });
   $('#exit-game').addEventListener('click',closeGame);
+  $('#game-profile-trigger').addEventListener('click',()=>openProfileDialog(true));
   $('#game-modal').addEventListener('cancel',event=>{event.preventDefault();if(!$('#case-overlay').hidden){if(caseCanClose)hideCaseOverlay();return;}closeGame();});
   $('#continue-button').addEventListener('click',()=>{if(saves[0])launchGame(saves[0].id);});
   function weightedReward(type){const items=REWARDS[type];let roll=Math.random()*items.reduce((s,x)=>s+x.weight,0);for(const item of items){roll-=item.weight;if(roll<=0)return item;}return items[0];}
@@ -338,7 +399,13 @@
   $('#avatar-pick').addEventListener('click',()=>$('#avatar-input').click());
   $('#avatar-input').addEventListener('change',async event=>{const file=event.target.files?.[0];if(!file)return;if(!file.type.startsWith('image/')){showToast('Обери файл зображення.');return;}if(file.size>20*1024*1024){showToast('Фото завелике. Максимум — 20 МБ.');return;}try{pendingAvatar=await fileToAvatar(file);renderAvatar($('#avatar-preview'),pendingAvatar);}catch{showToast('Не вдалося завантажити це фото. Спробуй інше.');}});
   $('#avatar-remove').addEventListener('click',()=>{pendingAvatar='';$('#avatar-input').value='';renderAvatar($('#avatar-preview'),'');});
-  $('#profile-form').addEventListener('submit',event=>{event.preventDefault();const name=$('#player-name').value.trim();if(!name)return;profile={name,avatar:pendingAvatar};try{localStorage.setItem(PROFILE_KEY,JSON.stringify(profile));}catch{showToast('Не вдалося зберегти фото.');return;}updateProfile();closeDialogs();showToast('Профіль оновлено.');});
+  $('#profile-form').addEventListener('submit',event=>{
+    event.preventDefault();const firstName=$('#player-first-name').value.trim(),lastName=$('#player-last-name').value.trim();if(!firstName||!lastName)return;
+    profile.firstName=firstName;profile.lastName=lastName;profile.name=`${firstName} ${lastName}`;profile.avatar=pendingAvatar;
+    if(!persistProfile()){showToast('Не вдалося зберегти профіль. Перевір вільне місце у браузері.');return;}
+    updateProfile();$('#profile-modal').close();showToast('Профіль оновлено.');
+  });
+  $('#daily-bonus-claim').addEventListener('click',claimDailyBonus);
   ['sound','motion','hints'].forEach(key=>{const input=$(`#${key}-toggle`);input.checked=settings[key]!==false;input.addEventListener('change',()=>{settings[key]=input.checked;try{localStorage.setItem(SETTINGS_KEY,JSON.stringify(settings));}catch{}document.body.classList.toggle('reduce-motion',settings.motion===false);});});
   $('#settings-done').addEventListener('click',()=>{closeDialogs();showToast('Налаштування збережено.');});
 
