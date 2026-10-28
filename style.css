@@ -142,7 +142,7 @@
 /* Navigable city map: pointer/touch panning with persistent zoom controls. */
 .map-surface{background:#11171b;touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none}
 .map-surface:before{display:none}
-.map-world{position:absolute;inset:0;z-index:1;overflow:hidden;transform-origin:50% 50%;background:linear-gradient(180deg,#0a0d1088,#090c1099),url('public/city-map.jpg') center/cover no-repeat;will-change:transform}
+.map-world{position:absolute;inset:-30%;z-index:1;overflow:hidden;transform-origin:50% 50%;background:url('public/city-map-grass-roads.jpg') center/cover no-repeat;will-change:transform}
 .map-surface.is-panning{cursor:grabbing}
 .map-controls{position:absolute;z-index:5;top:10px;right:10px;display:flex;align-items:center;gap:4px;padding:4px;border:1px solid #44423b;background:#101317eF;box-shadow:0 4px 16px #0008;touch-action:manipulation}
 .map-controls button{display:grid;min-width:36px;height:34px;place-items:center;padding:0 8px;border:1px solid #3b4146;background:#1a1f24;color:#e4b66d;font-size:18px;font-weight:800;line-height:1;cursor:pointer;touch-action:manipulation}
@@ -166,4 +166,115 @@
   .map-controls #map-zoom-reset{min-width:56px;font-size:9px}
   .selection-panel .selection-close{width:40px;height:40px;font-size:23px}
   .demolish-confirm button{min-height:40px;font-size:8px}
+}
+
+/* Full-screen city builder: the map is the play surface, not a side panel. */
+.game-shell{display:block;isolation:isolate}
+.game-topbar{position:absolute;inset:0 0 auto;height:62px;z-index:30;background:linear-gradient(180deg,#0b0e12f2 0%,#0b0e12cf 76%,#0b0e1280 100%);backdrop-filter:blur(8px)}
+.game-tabs{position:absolute;inset:auto 0 0;height:54px;z-index:30;padding:0 12px;border-top:1px solid #ffffff22;border-bottom:0;background:#0b0e12db;backdrop-filter:blur(12px)}
+.game-content{position:absolute;inset:0;z-index:1;overflow:auto;padding:0;background:transparent}
+.game-view:not(#city-view){min-height:100%;padding:88px 26px 82px}
+#city-view.game-view{position:absolute;inset:0;width:100%;height:100%;min-height:0;padding:0;overflow:hidden}
+.city-layout{position:absolute;inset:0;width:100%;height:100%;min-height:0;max-height:none;display:block;margin:0}
+.map-panel{position:absolute;inset:0;width:100%;height:100%;border:0;background:#668a44;overflow:hidden}
+.map-toolbar,.map-legend{display:none}
+.map-surface{position:absolute;inset:0;width:100%;height:100%;min-height:0;overflow:hidden;background:#648d43}
+.map-world{background:url('public/city-map-grass-roads.jpg') center/cover no-repeat}
+.map-overlay-grid,.map-water-label,.map-road-label,.map-scale{display:none!important}
+.city-summary{position:absolute;z-index:6;top:70px;left:14px;right:auto;width:max-content;max-width:min(600px,calc(100vw - 28px));align-items:center;gap:12px;margin:0;padding:10px 12px;border:1px solid #ffffff28;background:#10140fdc;box-shadow:0 10px 30px #0005;backdrop-filter:blur(10px)}
+.city-summary>div:first-child{min-width:115px}
+.city-summary .game-eyebrow{font-size:6px;letter-spacing:.9px}
+.city-summary h1{max-width:185px;margin:4px 0 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:22px}
+.city-summary p{display:none}
+.city-metrics{gap:4px}
+.city-metrics>div{min-width:72px;padding:6px 7px;background:#0c100caa}
+.city-metrics small{font-size:6px}
+.city-metrics b{margin-top:3px;font-size:9px}
+.build-panel{position:absolute;z-index:15;top:70px;right:12px;bottom:66px;width:min(340px,calc(100vw - 28px));min-height:0;max-height:none;overflow:hidden;border:1px solid #ffffff2c;background:#111611ed;box-shadow:0 18px 54px #0009;backdrop-filter:blur(14px)}
+.build-panel[hidden]{display:none!important}
+.build-heading{gap:9px}
+.build-heading>div{min-width:0;flex:1}
+.build-panel-close{display:grid;width:34px;height:34px;flex:none;place-items:center;border:1px solid #4b4b40;background:#1d211a;color:#e9bd71;font-size:22px;line-height:1;cursor:pointer}
+.build-panel-close:hover{border-color:#d5a456}
+.build-toggle{position:absolute;z-index:12;right:15px;bottom:67px;display:flex;align-items:center;gap:8px;min-height:42px;padding:0 14px;border:1px solid #fff2;background:#172015eF;color:#f2d998;font-size:9px;font-weight:900;letter-spacing:.7px;box-shadow:0 8px 26px #0008;backdrop-filter:blur(8px);cursor:pointer;touch-action:manipulation}
+.build-toggle>span{font-size:18px;line-height:1;color:#9ed177}
+.build-toggle:hover{border-color:#acd578;background:#24301d}
+.build-toggle[hidden]{display:none!important}
+.map-controls{top:70px;right:14px}
+.map-placement-hint{top:50%;left:50%;transform:translate(-50%,-50%);max-width:min(80vw,420px);white-space:normal;text-align:center;border-color:#d3e9a4;background:#121711ed;color:#e8f3c9;font-size:10px;box-shadow:0 12px 34px #0008}
+.map-placement-cancel{position:absolute;z-index:13;top:137px;left:50%;transform:translateX(-50%);min-height:38px;padding:0 14px;border:1px solid #d4bb81;background:#17170ff0;color:#f2daa1;font-size:8px;font-weight:900;letter-spacing:.7px;box-shadow:0 6px 20px #0008;cursor:pointer;touch-action:manipulation}
+.map-placement-cancel[hidden]{display:none!important}
+.building-earned{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:9px;padding:8px;border:1px solid #354330;background:#182018}
+.building-earned small{color:#9dab91;font-size:7px;font-weight:900;letter-spacing:.6px}
+.building-earned b{color:#c7e29c;font-size:10px}
+@media(max-width:680px){
+  .game-topbar{height:58px;gap:7px;padding:0 8px}
+  .game-brand{gap:5px;font-size:12px}
+  .game-brand .brand-mark{width:25px;height:25px}
+  .game-brand .brand-mark svg{width:18px;height:18px}
+  .game-city-name{padding-left:7px;min-width:0}
+  .game-city-name b{max-width:80px;font-size:13px}
+  .game-wallet{gap:4px}
+  .game-wallet .wallet-icon{display:none}
+  .game-wallet small{display:none}
+  .game-wallet b{font-size:8px}
+  .game-city-name b{max-width:68px}
+  .game-brand{font-size:11px}
+  .game-profile-trigger{padding:1px}
+  .game-profile-trigger .profile-avatar{width:26px;height:26px}
+  .game-exit{width:30px;height:30px}
+  .game-tabs{height:66px;padding:4px 6px calc(5px + env(safe-area-inset-bottom));gap:3px;justify-content:space-around}
+  .game-tab{min-width:0;flex:1;flex-direction:column;gap:3px;padding:3px 1px;border-bottom:0;border-radius:4px;font-size:7px;letter-spacing:.4px}
+  .game-tab svg{width:18px;height:18px}
+  .game-content{inset:0}
+  .game-view:not(#city-view){padding:72px 12px calc(78px + env(safe-area-inset-bottom))}
+  .city-summary{top:64px;left:8px;right:8px;width:auto;max-width:none;gap:5px;padding:6px 7px}
+  .city-summary>div:first-child{min-width:0;flex:1}
+  .city-summary .game-eyebrow{font-size:5px;letter-spacing:.45px}
+  .city-summary h1{max-width:105px;font-size:15px}
+  .city-metrics{flex:1;gap:3px}
+  .city-metrics>div{min-width:0;padding:5px 4px}
+  .city-metrics small{font-size:5px;letter-spacing:.2px}
+  .city-metrics b{font-size:7px}
+  .build-panel{top:auto;right:8px;bottom:calc(72px + env(safe-area-inset-bottom));left:8px;width:auto;max-height:min(60vh,520px);padding:10px;background:#111611f5}
+  .build-panel .build-list{min-height:0;overflow:auto}
+  .build-toggle{right:9px;bottom:calc(76px + env(safe-area-inset-bottom));min-height:42px;padding:0 12px;font-size:8px}
+  .map-controls{top:122px;right:8px;gap:3px;padding:3px}
+  .map-controls button{min-width:36px;height:36px;font-size:18px}
+  .map-controls #map-zoom-reset{min-width:48px;font-size:8px}
+  .map-placement-cancel{top:128px;left:8px;transform:none;min-height:36px;padding:0 9px;font-size:7px}
+  .map-placement-hint{max-width:75vw;font-size:8px}
+  .city-lot{width:70px;height:53px}
+  .building-earned{margin-top:7px;padding:7px}
+  .building-earned small{font-size:6px}
+}
+
+/* Respect the persisted help preference without hiding essential placement controls. */
+.hide-hints .build-tip,
+.hide-hints .selection-hint,
+.hide-hints .map-placement-hint{display:none!important}
+
+.build-filters{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;margin:0 0 9px}
+.build-filters[hidden]{display:none!important}
+.build-filters button{min-height:29px;padding:4px 3px;border:1px solid #30383a;background:#151a18;color:#858f8b;font-size:7px;font-weight:900;letter-spacing:.35px;cursor:pointer;touch-action:manipulation}
+.build-filters button:hover,.build-filters button.active{border-color:#7e6844;background:#292317;color:#efd094}
+.build-list .build-card[hidden]{display:none!important}
+@media(max-width:680px){.build-filters{gap:4px;margin-bottom:7px}.build-filters button{min-height:34px;font-size:7px}}
+@media(max-width:680px){
+  .city-summary .game-eyebrow{font-size:6px;letter-spacing:.55px}
+  .city-summary h1{font-size:16px}
+  .city-metrics small{font-size:6px}
+  .city-metrics b{font-size:9px}
+  .build-panel{max-height:min(68vh,620px)}
+  .build-panel .build-heading h2{font-size:19px}
+  .build-panel .build-list{grid-template-columns:minmax(0,1fr);gap:5px}
+  .build-panel .build-card{min-height:58px;gap:9px;padding:7px}
+  .build-panel .build-icon{width:34px;height:34px}
+  .build-panel .build-copy b{font-size:9px}
+  .build-panel .build-copy small{font-size:7px}
+  .build-panel .build-buy{min-width:68px;min-height:38px;padding:4px 7px;font-size:8px}
+  .build-filters button{min-height:38px;font-size:8px}
+  .map-controls button{min-width:40px;height:40px}
+  .city-lot b{font-size:7px}
+  .city-lot small{font-size:6px}
 }
