@@ -394,7 +394,7 @@
     $('#city-cash').textContent=money(save.cash);$('#container-cash').textContent=money(save.cash);
     $('#city-income').textContent=money(incomePerMinute(save));$('#city-population').textContent=Number(save.population).toLocaleString('uk-UA');
     $('#building-count').textContent=`${save.buildings.length} / ${MAX_BUILDINGS}`;$('#build-panel-count').textContent=`${save.buildings.length}/${MAX_BUILDINGS}`;$('#cases-count').textContent=Number(save.casesOpened)||0;
-    $('#map-lots').innerHTML=save.buildings.map((building,index)=>{const item=itemById(building.type),level=building.level||1;return `<button class="city-lot occupied ${selectedBuildingIndex===index?'selected':''}" data-building-index="${index}" aria-label="${escapeHtml(item?.name||building.name||'Будівля')}, рівень ${level}" style="--x:${building.x}%;--y:${building.y}%"><span class="lot-icon">${item?.icon||icon.warehouse}</span><b>${escapeHtml(item?.name||building.name||'Будівля')}</b><small>РІВ. ${level} · +${money(buildingIncome(building))}/ХВ</small></button>`;}).join('');
+    $('#map-lots').innerHTML=save.buildings.map((building,index)=>{const item=itemById(building.type),level=building.level||1;return `<button class="city-lot occupied ${selectedBuildingIndex===index?'selected':''}" data-building-index="${index}" aria-pressed="${selectedBuildingIndex===index}" aria-label="${escapeHtml(item?.name||building.name||'Будівля')}, рівень ${level}. Торкніться для керування" style="--x:${building.x}%;--y:${building.y}%"><span class="lot-icon">${item?.icon||icon.warehouse}</span><b>${escapeHtml(item?.name||building.name||'Будівля')}</b><small>РІВ. ${level} · +${money(buildingIncome(building))}/ХВ</small></button>`;}).join('');
     const buildList=$('#build-list');
     buildList.innerHTML=CATALOG.map(item=>`<article class="build-card ${pendingBuildId===item.id?'selected':''}" title="${escapeHtml(item.desc)}" ${buildFilter!=='all'&&item.kind!==buildFilter?'hidden':''}><span class="build-icon">${item.icon}</span><span class="build-copy"><b>${escapeHtml(item.name)}</b><small>+${money(item.income)}/хв</small></span><button class="build-buy" data-select-build="${item.id}" ${save.cash<item.cost||save.buildings.length>=MAX_BUILDINGS?'disabled':''}>${money(item.cost)}</button></article>`).join('');
     $$('[data-select-build]',buildList).forEach(btn=>btn.addEventListener('click',()=>selectBuild(btn.dataset.selectBuild)));
@@ -403,7 +403,7 @@
   }
   function mapLotSize(surfaceWidth) {
     const mobile=window.matchMedia?window.matchMedia('(max-width: 680px)').matches:window.innerWidth<=680;
-    return mobile?{width:70,height:53}:{width:Math.max(75,Math.min(112,surfaceWidth*.1)),height:Math.max(54,Math.min(78,surfaceWidth*.072))};
+    return mobile?{width:84,height:64}:{width:Math.max(75,Math.min(112,surfaceWidth*.1)),height:Math.max(54,Math.min(78,surfaceWidth*.072))};
   }
   function canPlace(x,y,ignoreIndex=null){
     const save=getCurrent();if(!save)return false;
