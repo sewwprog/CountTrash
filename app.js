@@ -78,8 +78,10 @@
     cars:[
       {name:'ВАЗ / Lada 2107 — розвалюха',value:900,marketPrice:900,rarity:'common',weight:32,image:'public/loot-lada-2107-wreck.jpg'},
       {name:'Daewoo Lanos — розвалюха',value:1500,marketPrice:1500,rarity:'common',weight:28,image:'public/loot-daewoo-lanos-wreck.jpg'},
-      {name:'Hyundai Elantra',value:22825,marketPrice:22825,rarity:'common',weight:15,image:'public/loot-hyundai-elantra.jpg'},
-      {name:'Volkswagen Golf GTI',value:35865,marketPrice:35865,rarity:'common',weight:10,image:'public/loot-vw-golf.jpg'},
+      {name:'Mazda 3 (2015)',value:12500,marketPrice:12500,rarity:'common',weight:6,image:'public/loot-mazda-3-2015.jpg'},
+      {name:'Honda Civic (2017)',value:14500,marketPrice:14500,rarity:'common',weight:5,image:'public/loot-honda-civic-2017.jpg'},
+      {name:'Hyundai Elantra',value:22825,marketPrice:22825,rarity:'common',weight:8,image:'public/loot-hyundai-elantra.jpg'},
+      {name:'Volkswagen Golf GTI',value:35865,marketPrice:35865,rarity:'common',weight:6,image:'public/loot-vw-golf.jpg'},
       {name:'Mercedes-AMG C 63',value:89350,marketPrice:89350,rarity:'rare',weight:6,image:'public/loot-mercedes-amg-c63.jpg'},
       {name:'Audi RS6 Avant',value:130700,marketPrice:130700,rarity:'epic',weight:3.5,image:'public/loot-audi-rs6.jpg'},
       {name:'BMW M3',value:79300,marketPrice:79300,rarity:'rare',weight:3,image:'public/loot-bmw-m3.jpg'},
